@@ -1,5 +1,5 @@
-// === JD CRED VIP - Motor de Triagem (v1.2) ===
-// Servidor Express puro (sem dependências internas do Codex)
+// === JD CRED VIP - Motor de Triagem (v1.3) ===
+// Servidor Express puro, compatível com Render
 
 import express from "express";
 import cors from "cors";
@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Rota de status
 app.get("/", (_req, res) => {
   res.json({
     status: "ok",
@@ -18,10 +19,11 @@ app.get("/", (_req, res) => {
   });
 });
 
+// Rota principal de triagem
 app.post("/triagem", (req, res) => {
   const { nome = "", produtoInformado = "", volumeLiquido = 0, perfil = {} } = req.body ?? {};
 
-  let produtoIdeal = produtoInformado || "Análise pendente";
+  let produtoIdeal = produtoInformado.trim() || "Análise pendente";
   let motivo = "OK";
   let limiteEstimado = 0;
   let comissaoPercent = 0;
@@ -69,5 +71,5 @@ app.post("/triagem", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor JD CRED VIP rodando em http://localhost:${PORT}`);
+  console.log(`🚀 Servidor JD CRED VIP rodando na porta ${PORT}`);
 });
