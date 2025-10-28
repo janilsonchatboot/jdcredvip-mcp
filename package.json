@@ -1,0 +1,14 @@
+{
+  "name": "jdcredvip-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server oficial da JD CRED VIP — integração inteligente entre Codex, Render e Google Planilhas.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "@modelcontext/server": "^1.0.0",
+    "express": "^4.19.0",
+    "googleapis": "^131.0.0",
+    "dotenv": "^16.4.5"
+  }
+}
