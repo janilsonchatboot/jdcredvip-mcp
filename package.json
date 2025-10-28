@@ -6,8 +6,7 @@
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": {
-    "@modelcontext/server": "^1.0.0",
-    "express": "^4.19.0",
+        "express": "^4.19.0",
     "googleapis": "^131.0.0",
     "dotenv": "^16.4.5"
   }
