@@ -1,116 +1,117 @@
 // === JD CRED VIP - Motor de Triagem (v1.4) ===
-// Servidor Express puro, compatível com Render e integração com Google Sheets
+  // Servidor Express com integração ao Google Sheets
 
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import { getSheetData } from "./services/googleSheets.js";
+  import express from "express";
+  import cors from "cors";
+  import bodyParser from "body-parser";
+  import { getDashboardMetrics } from "./services/googleSheets.js";
+  import { hasGoogleCredentials, missingGoogleEnv } from "./config/env.js";
 
-const app = express();
-const PORT = process.env.PORT || 8080;
+  const app = express();
+  const PORT = process.env.PORT || 8080;
 
-app.use(cors());
-app.use(bodyParser.json());
+  app.use(cors());
+  app.use(bodyParser.json());
 
-// Rota de status
-app.get("/", (_req, res) => {
-  res.json({
-    status: "ok",
-    mensagem: "Motor de triagem JD CRED VIP ativo e pronto para acolher novos clientes."
+  const normaliza = (texto = "") =>
+    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  // Rota de status
+  app.get("/", (_req, res) => {
+    res.json({
+      status: "ok",
+      mensagem: "Motor de triagem JD CRED VIP ativo e pronto para acolher novos clientes."
+    });
   });
-});
 
-// Rota principal de triagem
-app.post("/triagem", (req, res) => {
-  const { nome = "", produtoInformado = "", volumeLiquido = 0, perfil = {} } = req.body ?? {};
+  // Rota principal de triagem
+  app.post("/triagem", (req, res) => {
+    const { nome = "", produtoInformado = "", volumeLiquido = 0, perfil = {} } = req.body ?? {};
 
-  let produtoIdeal = produtoInformado.trim() || "Análise pendente";
-  let motivo = "OK";
-  let limiteEstimado = 0;
-  let comissaoPercent = 0;
-  let upsell = "";
-  let status = "✅ Apto";
+    let produtoIdeal = produtoInformado.trim() || "Análise pendente";
+    let motivo = "OK";
+    let limiteEstimado = 0;
+    let comissaoPercent = 0;
+    let upsell = "";
+    let status = "✅ Apto";
 
-  if (perfil?.isBA) {
-    produtoIdeal = "Crédito Bolsa Família";
-    limiteEstimado = 750;
-    comissaoPercent = 0.09;
-    upsell = "Conta de Luz";
-  } else if (perfil?.isINSS) {
-    produtoIdeal = "INSS Consignado";
-    limiteEstimado = 15000;
-    comissaoPercent = 0.17;
-    upsell = "Portabilidade + Refin";
-  } else if (perfil?.isCLT) {
-    produtoIdeal = "Crédito Trabalhador CLT";
-    limiteEstimado = 2000;
-    comissaoPercent = 0.1;
-    upsell = "FGTS / Conta de Luz";
-  } else if (produtoInformado?.toLowerCase().includes("fgts")) {
-    produtoIdeal = "FGTS Saque-Aniversário";
-    limiteEstimado = 5000;
-    comissaoPercent = 0.12;
-    upsell = "Conta de Luz";
-  } else {
-    produtoIdeal = "Crédito Pessoal";
-    limiteEstimado = 1000;
-    comissaoPercent = 0.08;
-  }
+    const possuiPerfil = perfil?.isBA || perfil?.isINSS || perfil?.isCLT;
+    const produtoNormalizado = normaliza(produtoInformado);
 
-  const comissaoEstimada = (Number(volumeLiquido) || 0) * comissaoPercent;
+    if (!nome.trim()) {
+      status = "⚠️ Revisar";
+      motivo = "Informe o nome do cliente para registrar no CRM.";
+    }
 
-  res.json({
-    nome,
-    produtoIdeal,
-    motivo,
-    limiteEstimado,
-    comissaoPercent,
-    comissaoEstimada,
-    upsell,
-    status
+    if (!possuiPerfil && !produtoNormalizado) {
+      status = "⚠️ Revisar";
+      motivo = "Defina o perfil (INSS, Bolsa Família, CLT) ou o produto desejado.";
+    }
+
+    if (perfil?.isBA) {
+      produtoIdeal = "Crédito Bolsa Família";
+      limiteEstimado = 750;
+      comissaoPercent = 0.09;
+      upsell = "Conta de Luz";
+    } else if (perfil?.isINSS) {
+      produtoIdeal = "INSS Consignado";
+      limiteEstimado = 15000;
+      comissaoPercent = 0.17;
+      upsell = "Portabilidade + Refin";
+    } else if (perfil?.isCLT) {
+      produtoIdeal = "Crédito Trabalhador CLT";
+      limiteEstimado = 20000;
+      comissaoPercent = 0.1;
+      upsell = "FGTS / Conta de Luz";
+    } else if (produtoNormalizado.includes("fgts")) {
+      produtoIdeal = "FGTS Saque-Aniversário";
+      limiteEstimado = 5000;
+      comissaoPercent = 0.12;
+      upsell = "Conta de Luz";
+    } else if (!possuiPerfil) {
+      produtoIdeal = "Crédito Pessoal Seguro";
+      limiteEstimado = 1000;
+      comissaoPercent = 0.08;
+    }
+
+    const volume = Number(volumeLiquido) || 0;
+    const comissaoEstimada = Number((volume * comissaoPercent).toFixed(2));
+
+    res.json({
+      nome: nome.trim(),
+      produtoIdeal,
+      motivo,
+      limiteEstimado,
+      comissaoPercent,
+      comissaoEstimada,
+      upsell,
+      status
+    });
   });
-});
 
-// === Nova Rota: /api/dashboard ===
-// Lê dados da planilha Google Sheets e retorna como JSON estruturado
-app.get("/api/dashboard", async (_req, res) => {
-  try {
-    const range = "Resumo_Geral!A1:E10"; // ajuste conforme a aba e células da sua planilha CRM
-    const data = await getSheetData(range);
-
-    if (!data || !data.length) {
-      return res.json({
-        origem: "JD CRED VIP – Dashboard Online",
-        totalLinhas: 0,
-        dados: [],
-        aviso: "Nenhum dado encontrado na planilha."
+  // Rota do dashboard (GET /api/dashboard)
+  app.get("/api/dashboard", async (_req, res) => {
+    if (!hasGoogleCredentials) {
+      return res.status(503).json({
+        status: "erro",
+        mensagem: "Configure as variáveis do Google Sheets antes de consultar o dashboard.",
+        variaveisFaltando: missingGoogleEnv()
       });
     }
 
-    const headers = data[0];
-    const rows = data.slice(1).map(row => {
-      const obj = {};
-      headers.forEach((header, i) => {
-        obj[header] = row[i] || "";
+    try {
+      const dados = await getDashboardMetrics();
+      res.json({ status: "ok", dados });
+    } catch (error) {
+      console.error("Erro ao carregar dados do dashboard:", error);
+      res.status(500).json({
+        status: "erro",
+        mensagem: "Falha ao acessar os dados da planilha.",
+        detalhes: error.message
       });
-      return obj;
-    });
+    }
+  });
 
-    res.json({
-      origem: "JD CRED VIP – Dashboard Online",
-      totalLinhas: rows.length,
-      dados: rows
-    });
-  } catch (error) {
-    console.error("Erro ao carregar dados do dashboard:", error);
-    res.status(500).json({
-      erro: "Falha ao acessar os dados da planilha.",
-      detalhes: error.message
-    });
-  }
-});
-
-// Inicialização
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor JD CRED VIP rodando na porta ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Servidor JD CRED VIP rodando na porta ${PORT}`);
+  });
