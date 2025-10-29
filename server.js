@@ -1,4 +1,4 @@
-// === JD CRED VIP - Motor de Triagem (v1.4) ===
+/ === JD CRED VIP - Motor de Triagem (v1.4) ===
   // Servidor Express com integração ao Google Sheets
 
   import express from "express";
