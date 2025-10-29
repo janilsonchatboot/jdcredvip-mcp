@@ -1,22 +1,26 @@
 // === JD CRED VIP – Integração Google Sheets ===
-const { google } = require('googleapis');
-const env = require('../config/env');
+import { google } from "googleapis";
+import { env } from "../config/env.js";
 
-async function getSheetData(range = 'Resumo_Geral!A1:E10') {
-  const credentials = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_KEY);
+export async function getDashboardMetrics(range = "Resumo_Geral!A1:E10") {
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: env.googleServiceAccountEmail,
+        private_key: env.googlePrivateKey
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+    });
 
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
-  });
+    const sheets = google.sheets({ version: "v4", auth });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: env.sheetId,
+      range
+    });
 
-  const sheets = google.sheets({ version: 'v4', auth });
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: env.GOOGLE_SHEETS_ID,
-    range
-  });
-
-  return response.data.values;
+    return res.data.values || [];
+  } catch (err) {
+    console.error("Erro ao acessar planilha:", err.message);
+    return [];
+  }
 }
-
-module.exports = { getSheetData };
