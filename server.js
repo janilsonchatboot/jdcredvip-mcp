@@ -1,9 +1,10 @@
-// === JD CRED VIP - Motor de Triagem (v1.3) ===
-// Servidor Express puro, compatível com Render
+// === JD CRED VIP - Motor de Triagem (v1.4) ===
+// Servidor Express puro, compatível com Render e integração com Google Sheets
 
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { getSheetData } from "./services/googleSheets.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -70,6 +71,46 @@ app.post("/triagem", (req, res) => {
   });
 });
 
+// === Nova Rota: /api/dashboard ===
+// Lê dados da planilha Google Sheets e retorna como JSON estruturado
+app.get("/api/dashboard", async (_req, res) => {
+  try {
+    const range = "Resumo_Geral!A1:E10"; // ajuste conforme a aba e células da sua planilha CRM
+    const data = await getSheetData(range);
+
+    if (!data || !data.length) {
+      return res.json({
+        origem: "JD CRED VIP – Dashboard Online",
+        totalLinhas: 0,
+        dados: [],
+        aviso: "Nenhum dado encontrado na planilha."
+      });
+    }
+
+    const headers = data[0];
+    const rows = data.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((header, i) => {
+        obj[header] = row[i] || "";
+      });
+      return obj;
+    });
+
+    res.json({
+      origem: "JD CRED VIP – Dashboard Online",
+      totalLinhas: rows.length,
+      dados: rows
+    });
+  } catch (error) {
+    console.error("Erro ao carregar dados do dashboard:", error);
+    res.status(500).json({
+      erro: "Falha ao acessar os dados da planilha.",
+      detalhes: error.message
+    });
+  }
+});
+
+// Inicialização
 app.listen(PORT, () => {
   console.log(`🚀 Servidor JD CRED VIP rodando na porta ${PORT}`);
 });
