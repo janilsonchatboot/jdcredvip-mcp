@@ -1,0 +1,22 @@
+{
+  "name": "jd-cred-vip",
+  "version": "1.0.0",
+  "description": "API local para triagem de clientes JD CRED VIP",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "api": "node server.js",
+    "dashboard:pull": "node scripts/fetch-dashboard.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "googleapis": "^164.1.0"
+  }
+}

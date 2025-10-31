@@ -1,0 +1,17 @@
+﻿Roteiro (30s):
+1. Cena 1 (5s) — Pessoa segurando a conta de energia.
+   Texto na tela: Conta de luz em dia? Pode virar crédito!
+2. Cena 2 (7s) — Apresentador(a) falando.
+   Fala: Aqui na JD CRED VIP você usa a própria conta de luz como garantia. Não precisa botar imóvel nem carro no meio.
+3. Cena 3 (6s) — Close em celular mostrando conversa com JD.
+   Fala: Análise rapidinha, sem consulta SPC/SERASA* pro crédito da conta de luz.
+4. Cena 4 (6s) — Gráfico simples mostrando parcelas cabendo no bolso.
+   Fala: Parcelas do jeitinho que cabe no seu orçamento.
+5. Cena 5 (6s) — Apresentador(a) sorrindo.
+   Fala: A equipe JD cuida de você do início ao fim, com todo carinho.
+6. Cena final (5s) — Tela laranja com CTA.
+   Texto: ➡️ Saiba mais e simule no WhatsApp: 84 98856-2331
+
+Legenda:
+Quando a conta de luz vira solução e não problema! Dá pra pegar um crédito justo usando a fatura ativa, sem enrolação e com acompanhamento 100% transparente. Quer saber se rola pra você? Chama que a gente explica tim tim por tim tim.
+➡️ Saiba mais e simule no WhatsApp: 84 98856-2331
