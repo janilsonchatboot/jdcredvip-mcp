@@ -48,6 +48,14 @@ const loadServiceAccount = () => {
     }
   }
 
+  const jsonFromEnv = process.env.GOOGLE_SERVICE_ACCOUNT;
+  if (jsonFromEnv) {
+    const parsed = parseServiceAccountJson(jsonFromEnv);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
   const inline = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ?? "";
   if (inline.trim().startsWith("{")) {
     const parsed = parseServiceAccountJson(inline);
@@ -81,6 +89,8 @@ export const missingGoogleEnv = () => {
   if (!env.googleServiceAccountEmail) {
     if (process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH) {
       missing.push("client_email no arquivo apontado por GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH");
+    } else if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+      missing.push("client_email no JSON de GOOGLE_SERVICE_ACCOUNT");
     } else if ((process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ?? "").trim().startsWith("{")) {
       missing.push("client_email no JSON de GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
     } else {
@@ -90,6 +100,8 @@ export const missingGoogleEnv = () => {
   if (!env.googlePrivateKey) {
     if (process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH) {
       missing.push("private_key no arquivo apontado por GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH");
+    } else if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+      missing.push("private_key no JSON de GOOGLE_SERVICE_ACCOUNT");
     } else if ((process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY ?? "").trim().startsWith("{")) {
       missing.push("private_key no JSON de GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
     } else {
