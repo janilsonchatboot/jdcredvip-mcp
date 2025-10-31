@@ -41,10 +41,21 @@ A API aceita diferentes formatos para as credenciais do Google. Defina pelo meno
 |------|-----------|
 | `SHEETS_SPREADSHEET_ID` | ID da planilha com o dashboard.
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | E-mail da conta de serviço.
-| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | Chave privada (use `\n` para quebras de linha se definir inline).
+| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | Chave privada (cole exatamente como o Google fornece; o Render mantém as quebras de linha).
 | `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH` | Caminho para um arquivo `.json` com as credenciais completas (opcional, substitui o campo acima).
+| `GOOGLE_SERVICE_ACCOUNT` | JSON completo da credencial (alternativa às variáveis separadas).
 
 > Dica: Em desenvolvimento, você pode criar um arquivo `.env` na raiz do projeto com essas variáveis.
+
+### Configuração no Render
+
+1. Abra **Render > Dashboard > Environment** do serviço.
+2. Cadastre as variáveis `SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL` e `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`.
+   - Copie a chave privada exatamente como aparece no JSON do Google (com as quebras de linha). O Render armazena o conteúdo sem necessidade de escapes.
+   - Se preferir usar o JSON completo, cadastre apenas a variável `GOOGLE_SERVICE_ACCOUNT`.
+3. Opcionalmente, faça upload do arquivo de credencial fora do repositório e defina `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH` apontando para o caminho em tempo de execução.
+
+As rotinas em `src/config/env.js` já priorizam os valores das variáveis e tratam automaticamente os formatos suportados, garantindo que o deploy continue acessando o Google Sheets com segurança.
 
 ## Endpoints principais
 - `GET /` – checagem de saúde com mensagem acolhedora para o time.
