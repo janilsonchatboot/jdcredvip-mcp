@@ -3,12 +3,17 @@ import { google } from "googleapis";
 import { env } from "../config/env.js";
 
 export async function getDashboardMetrics(range = "'Dashboard'!A1:E30") {
+  if (!env.sheetId) {
+    throw new Error("SHEET_ID não configurado");
+  }
+
+  if (!env.googleServiceAccount?.client_email || !env.googleServiceAccount?.private_key) {
+    throw new Error("Credenciais do Google Service Account ausentes ou incompletas");
+  }
+
   try {
     const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: env.googleServiceAccountEmail,
-        private_key: env.googlePrivateKey
-      },
+      credentials: env.googleServiceAccount,
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     });
 
