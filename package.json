@@ -5,6 +5,10 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
+codex/revise-project-for-repository-connection-3m2uxm
+    "start": "node src/server.js",
+=======
+main
     "api": "node src/server.js",
     "dashboard:pull": "node scripts/fetch-dashboard.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
