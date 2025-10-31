@@ -1,5 +1,8 @@
-import { getDashboardMetrics } from "../services/googleSheets.js";
-import { hasGoogleCredentials, missingGoogleEnv } from "../config/env.js";
+import {
+  getDashboardMetrics,
+  hasGoogleCredentials,
+  missingGoogleEnv
+} from "../src/index.js";
 
 if (!hasGoogleCredentials) {
   console.error(
