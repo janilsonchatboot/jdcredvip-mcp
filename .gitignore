@@ -44,6 +44,7 @@ jdtalk/node_modules/
 jdtalk/jdtalk-main/agent-runtime/*.log
 jdtalk/jdtalk-main/agent-runtime/dist/
 jdtalk/jdtalk-main/dist/
+jdcredvip-mcp/integrations/*.json
 
 # Temporary files
 *.tmp
