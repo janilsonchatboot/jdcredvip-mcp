@@ -1,0 +1,54 @@
+{
+  "name": "supabase_prompts",
+  "description": "Conjunto de guias e prompts sobre Supabase, políticas RLS e integrações com JD Talk.",
+  "entries": [
+    {
+      "id": "supabase.governance.functions",
+      "title": "Banco de dados criar funções",
+      "path": "01 - Banco de dados criar funções.md",
+      "tags": ["supabase", "sql", "functions", "documentation"]
+    },
+    {
+      "id": "supabase.governance.migrations",
+      "title": "Banco de dados criar migração",
+      "path": "02 - Banco de dados criar migração.md",
+      "tags": ["supabase", "sql", "migrations", "drizzle"]
+    },
+    {
+      "id": "supabase.architecture.declarative-schema",
+      "title": "Banco de dados esquema declarativo",
+      "path": "03 - Banco de dados esquema declarativo.md",
+      "tags": ["supabase", "schema", "design", "documentation"]
+    },
+    {
+      "id": "supabase.security.rls-policies",
+      "title": "Banco de dados políticas RLS",
+      "path": "04 - Banco de dados políticas RLS.md",
+      "tags": ["supabase", "security", "rls"]
+    },
+    {
+      "id": "supabase.guides.sql-style",
+      "title": "Guia de estilo SQL Postgres",
+      "path": "05 - Guia de estilo SQL Postgres.md",
+      "tags": ["postgres", "styleguide", "sql"]
+    },
+    {
+      "id": "supabase.edge.functions",
+      "title": "Escrevendo funções de borda",
+      "path": "06 - Escrevendo funções de borda.md",
+      "tags": ["supabase", "edge-functions", "serverless"]
+    },
+    {
+      "id": "supabase.bootstrap.nextjs-auth",
+      "title": "Bootstrap Next.js com Auth",
+      "path": "07 - Bootstrap Next.js com Auth.md",
+      "tags": ["nextjs", "supabase", "auth"]
+    },
+    {
+      "id": "supabase.realtime.ai-assistant",
+      "title": "Supabase Realtime AI Assistant Guide",
+      "path": "08 - Supabase Realtime AI Assistant Guide.md",
+      "tags": ["supabase", "realtime", "ai", "agent"]
+    }
+  ]
+}

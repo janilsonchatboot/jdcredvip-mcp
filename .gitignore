@@ -1,21 +1,51 @@
+# General build artifacts
+node_modules/
+dist/
+build/
+
+# Environment files and secrets
 .env
 .env.*
-node_modules/
-venv/
-JD_TALK_v2.zip
-JD_TALK/jdtalk-main.zip
+config/service-account.json
+config/coherent-voice-*.json
 client_secrets.*json
 client_secret_*
 senha.txt
 temp_fgts.txt
-crm_dashboard.json
-crm_metrics.json
-JD_CRED_VIP_CRM_Atualizacao_Tecnica.pdf
-JD_CRED_VIP_Instalacao_Preparacao.pdf
-config/service-account.json
-config/coherent-voice-*.json
-automacoes/secrets/
-*.xlsx
+
+# Python caches
+venv/
 scripts/__pycache__/
 *.pyc
+
+# Legacy bundles
+JD_TALK_v2.zip
+JD_TALK/jdtalk-main.zip
+
+# Backend (jdcredvip-mcp)
+jdcredvip-mcp/.env
+jdcredvip-mcp/node_modules/
+jdcredvip-mcp/venv/
+jdcredvip-mcp/config/service-account.json
+jdcredvip-mcp/config/*.json
+jdcredvip-mcp/client_secrets.json
+jdcredvip-mcp/client_secret_*.json
+jdcredvip-mcp/automacoes/secrets/
+jdcredvip-mcp/temp_fgts.txt
+jdcredvip-mcp/senha.txt
+jdcredvip-mcp/csvsupabase
+jdcredvip-mcp/data/**/*.csv
+jdcredvip-mcp/data/**/*.xlsx
+jdcredvip-mcp/public/blog/*.tmp
+
+# Frontend (jdtalk)
+jdtalk/.env
+jdtalk/node_modules/
+jdtalk/jdtalk-main/agent-runtime/*.log
+jdtalk/jdtalk-main/agent-runtime/dist/
+jdtalk/jdtalk-main/dist/
+
+# Temporary files
 *.tmp
+tree_staged.txt
+tree_no_venv.txt

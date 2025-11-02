@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - JD CRED VIP</title>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" integrity="sha384-O77Gtg+xdazc2edict2pZ9gcB0rZonD9WY1Q6sndbHKn+M12Scs7nP58UDToUX2P" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">
+        <span class="badge">JD</span>
+        <strong>JD CRED VIP</strong>
+      </div>
+      <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/api/dashboard" target="_blank" rel="noopener">API</a>
+        <a href="https://www.jdcredvip.com.br" target="_blank" rel="noopener">Site</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section id="meta-header" class="card highlight">
+        <h1>Resumo de Metas</h1>
+        <p class="meta-info">
+          <span id="meta-title">-</span>
+          <span id="meta-reference">-</span>
+          <span id="meta-author">-</span>
+        </p>
+      </section>
+
+      <section class="cards">
+        <div class="card">
+          <p class="label">Contratos</p>
+          <p class="value" id="metric-contracts">-</p>
+        </div>
+        <div class="card">
+          <p class="label">Volume Bruto</p>
+          <p class="value" id="metric-volume-bruto">-</p>
+        </div>
+        <div class="card">
+          <p class="label">Volume Líquido</p>
+          <p class="value" id="metric-volume-liquido">-</p>
+        </div>
+        <div class="card">
+          <p class="label">Comissão</p>
+          <p class="value" id="metric-comissao">-</p>
+        </div>
+      </section>
+
+      <section class="charts">
+        <div class="chart-card">
+          <h2>Volume por Produto</h2>
+          <canvas id="volumeChart" height="280"></canvas>
+        </div>
+        <div class="chart-card">
+          <h2>Comissão por Produto</h2>
+          <canvas id="commissionChart" height="280"></canvas>
+        </div>
+      </section>
+
+      <section class="card table-card">
+        <div class="table-header">
+          <h2>Detalhamento por Produto</h2>
+          <button type="button" id="reload-button">Atualizar</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="products-table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Qtde</th>
+                <th>Volume Líquido</th>
+                <th>Volume Bruto</th>
+                <th>Comissão</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card history-card">
+        <div class="history-header">
+          <h2>Histórico de Publicações</h2>
+          <span id="history-count"></span>
+        </div>
+        <ul id="history-list"></ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>JD CRED VIP &copy; <span id="current-year"></span> — Dashboard conectado ao banco de dados MySQL/PostgreSQL.</small>
+    </footer>
+
+    <script src="/dashboard.js" type="module"></script>
+  </body>
+</html>

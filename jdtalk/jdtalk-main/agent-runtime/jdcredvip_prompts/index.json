@@ -1,0 +1,30 @@
+{
+  "name": "jdcredvip_prompts",
+  "description": "Diretrizes de negócio e comunicação da JD CRED VIP para o Codex Realtime Agent.",
+  "entries": [
+    {
+      "id": "jdcredvip.business",
+      "title": "Inteligência de Negócio e Políticas Operacionais",
+      "path": "jdcredvip.business.md",
+      "tags": ["business", "policy", "operations", "jdcredvip"]
+    },
+    {
+      "id": "jdcredvip.sales",
+      "title": "Diretrizes Comerciais",
+      "path": "jdcredvip.sales.md",
+      "tags": ["sales", "crm", "followup", "jdcredvip"]
+    },
+    {
+      "id": "jdcredvip.voice",
+      "title": "Tom de Voz",
+      "path": "jdcredvip.voice.md",
+      "tags": ["voice", "communication", "brand"]
+    },
+    {
+      "id": "jdcredvip.extrato",
+      "title": "Regras de Análise de Extrato INSS",
+      "path": "jdcredvip.extrato.md",
+      "tags": ["inss", "extrato", "analysis", "portabilidade", "refinanciamento"]
+    }
+  ]
+}

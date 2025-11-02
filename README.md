@@ -1,96 +1,58 @@
-# Motor de Triagem JD CRED VIP
+# JD CRED VIP – Full Stack Workspace
 
-Bem-vindo(a) ao hub que concentra a inteligência comercial e o acesso a dados internos da JD CRED VIP. Esta API facilita a triagem de clientes, consulta o painel no Google Sheets e prepara integrações com outros serviços da empresa.
+Este repositório unifica o backend operacional da JD CRED VIP e o frontend/agent do JDTalk. A organização atual segue uma estrutura de monorepo simples, com cada parte mantendo a sua própria documentação e dependências.
 
-## Visão Geral
-- **Transparência:** códigos e regras bem descritos para que toda a equipe entenda como o atendimento decide o melhor produto.
-- **Acolhimento:** respostas amigáveis para monitorar a saúde do serviço e orientar o time comercial.
-- **Solução rápida:** scripts prontos para buscar métricas e iniciar o servidor em poucos comandos.
+```
+.
+├── jdcredvip-mcp/   # backend: motor de triagem, automações e serviços
+└── jdtalk/          # frontend + agent runtime do JDTalk
+```
 
-## Estrutura Principal
-- `src/app.js` – cria a aplicação Express com rotas de saúde, dashboard e triagem.
-- `src/server.js` – inicia o servidor HTTP local (porta padrão 3000).
-- `src/routes/` – rotas HTTP separadas por responsabilidade.
-- `src/modules/triage/engine.js` – regras de triagem e cálculo de comissão estimada.
-- `src/services/googleSheets.js` – consulta o painel no Google Sheets com autenticação de serviço.
-- `scripts/fetch-dashboard.mjs` – script em linha de comando para puxar métricas do dashboard.
+## Projetos
 
-## Pré-requisitos
-- Node.js 18 ou superior.
-- Conta de serviço no Google Cloud com acesso leitura ao Google Sheets do dashboard.
+### `jdcredvip-mcp/` – Motor de Triagem e Automação
+Backend em Node.js (Express + Knex) com scripts auxiliares escritos em ES Modules/Python. Principais recursos:
 
-## Como começar
-1. Instale as dependências:
-   ```bash
-   npm install
-   ```
-2. Configure as variáveis de ambiente (veja lista abaixo).
-3. Rode o servidor local:
-   ```bash
-   npm run api
-   ```
-4. Faça uma chamada de saúde para garantir que está tudo certo:
-   ```bash
-   curl http://localhost:3000/
-   ```
+- Triagem de clientes (`POST /triagem`) com regras atualizadas de produtos JD CRED VIP.
+- Publicação e consulta de metas (`/api/publicar-meta`, `/api/metas`, `/api/dashboard`), com persistência em banco relacional (Postgres ou MySQL).
+- Dashboard web em `/dashboard` servindo os últimos dados publicados.
+- Scripts em `scripts/` para normalizar planilhas, gerar assets de blog e publicar posts via Blogger API.
 
-## Variáveis de Ambiente
-A API aceita diferentes formatos para as credenciais do Google. Defina pelo menos um dos caminhos abaixo:
+👉 Documentação completa: [`jdcredvip-mcp/README.md`](jdcredvip-mcp/README.md)
 
-| Nome | Descrição |
-|------|-----------|
-| `SHEETS_SPREADSHEET_ID` | ID da planilha com o dashboard.
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | E-mail da conta de serviço.
-| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | Chave privada (cole exatamente como o Google fornece; o Render mantém as quebras de linha).
-| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH` | Caminho para um arquivo `.json` com as credenciais completas (opcional, substitui o campo acima).
-| `GOOGLE_SERVICE_ACCOUNT` | JSON completo da credencial (alternativa às variáveis separadas).
+### `jdtalk/` – Plataforma de Comunicação e IA
+Aplicação full-stack (React + Express + Drizzle ORM) utilizada pelo time para atendimento e automações com IA. As pastas principais dentro de `jdtalk/jdtalk-main/` são:
 
-> Dica: Em desenvolvimento, você pode criar um arquivo `.env` na raiz do projeto com essas variáveis.
+- `client/`: frontend em React/Vite.
+- `server/`: backend Node/Express com WebSocket e integrações.
+- `agent-runtime/`: agente Codex (Supabase Realtime + OpenAI) com análise automática de extratos INSS.
+- `shared/`: esquemas e tipos compartilhados (Zod/Drizzle).
 
-### Configuração no Render
+👉 Documentação completa: [`jdtalk/jdtalk-main/README.md`](jdtalk/jdtalk-main/README.md)
 
-1. Abra **Render > Dashboard > Environment** do serviço.
-2. Cadastre as variáveis `SHEETS_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL` e `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`.
-   - Copie a chave privada exatamente como aparece no JSON do Google (com as quebras de linha). O Render armazena o conteúdo sem necessidade de escapes.
-   - Se preferir usar o JSON completo, cadastre apenas a variável `GOOGLE_SERVICE_ACCOUNT`.
-3. Opcionalmente, faça upload do arquivo de credencial fora do repositório e defina `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_PATH` apontando para o caminho em tempo de execução.
+## Fluxo de Trabalho
 
-As rotinas em `src/config/env.js` já priorizam os valores das variáveis e tratam automaticamente os formatos suportados, garantindo que o deploy continue acessando o Google Sheets com segurança.
+1. **Instalação**  
+   - Backend: `cd jdcredvip-mcp && npm install`  
+   - Frontend: `cd jdtalk/jdtalk-main && npm install`
 
-## Endpoints principais
-- `GET /` – checagem de saúde com mensagem acolhedora para o time.
-- `GET /api/dashboard` – retorna métricas atualizadas do Google Sheets (503 se faltar credencial, 500 em caso de erro).
-- `POST /triagem` – processa dados de um cliente.
-  - Exemplo de payload:
-    ```json
-    {
-      "nome": "Maria Souza",
-      "produtoInformado": "Empréstimo INSS",
-      "volumeLiquido": 12000,
-      "perfil": { "isINSS": true }
-    }
-    ```
-  - Resposta resumida:
-    ```json
-    {
-      "nome": "Maria Souza",
-      "produtoIdeal": "INSS Consignado",
-      "motivo": "OK",
-      "limiteEstimado": 15000,
-      "comissaoPercent": 0.17,
-      "comissaoEstimada": 2040,
-      "upsell": "Portabilidade + Refin",
-      "status": "✅ Apto"
-    }
-    ```
+2. **Executar**  
+   - Backend: `npm start` (porta padrão 8080, ver `.env.example`).  
+   - Frontend/Agent: `npm run dev` ou scripts específicos descritos na documentação do JDTalk.
 
-## Scripts úteis
-- `npm run api` – inicia o servidor HTTP.
-- `npm run dashboard:pull` – imprime no console o JSON com todas as métricas do dashboard.
+3. **Variáveis de ambiente**  
+   - Nunca commitamos arquivos `.env`. Cada projeto possui seu `.env.example` com o que precisa ser preenchido.
+   - Segredos (chaves Google, OpenAI, Hostinger etc.) ficam fora do repositório. Utilize os painéis de deploy (Hostinger, Render, Supabase, etc.) para configurá-los.
 
-## Boas práticas para integrações futuras
-- Reutilize os exports públicos disponíveis em `src/index.js` para compartilhar regras de triagem ou acesso às métricas em outros projetos.
-- Mantenha novas rotas organizadas dentro de `src/routes/`, sempre com linguagem simples nas respostas para reforçar acolhimento e transparência.
-- Antes de publicar qualquer dado sensível, confirme se o cliente autorizou o uso da informação.
+4. **Deploy**  
+   - Hostinger (backend): configurar o diretório de execução como `jdcredvip-mcp/`, rodar `npm install` e `npm start`.
+   - Frontend: seguir a estratégia do ambiente em que será servido (Vite build, Supabase Functions, etc.).
+   - Postman/Testing: com o backend ativo, configure ambientes com as variáveis e o host em produção para validar os endpoints.
 
-➡️ **Saiba mais e simule no WhatsApp: 84 98856-2331**
+## Convenções e Git
+
+- Não versionamos dados sensíveis (planilhas reais, CSVs operacionais, PDFs internos, chaves JSON). Eles permanecerão fora do Git.
+- O `.gitignore` foi atualizado para cobrir dist, logs e diretórios temporários gerados durante o desenvolvimento.
+- Após mudanças substanciais, favor atualizar também os READMEs específicos.
+
+Sinta-se à vontade para abrir issues ou pull requests quando ajustes forem necessários. A meta do repositório é manter backend e frontend sincronizados para evoluções rápidas e deploys confiáveis. Vamos em frente! 💼🚀
