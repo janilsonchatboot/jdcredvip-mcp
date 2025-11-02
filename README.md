@@ -17,6 +17,7 @@ Backend em Node.js (Express + Knex) com scripts auxiliares (ES Modules/Python). 
 - Publicação/consulta de metas (`/api/publicar-meta`, `/api/metas`, `/api/dashboard`) com persistência em banco relacional (Postgres ou MySQL).
 - Dashboard web em `/dashboard` servindo os dados mais recentes.
 - Scripts em `scripts/` para normalizar planilhas, gerar assets de blog e publicar posts via Blogger API.
+- Integrações Crefaz/Nexxo com armazenamento próprio para propostas, contratos e comissões.
 
 Documentação: [`jdcredvip-mcp/README.md`](jdcredvip-mcp/README.md)
 
@@ -29,6 +30,10 @@ Aplicação full-stack (React + Express + Drizzle ORM) utilizada pelo time para at
 - `shared/`: esquemas e tipos compartilhados (Zod/Drizzle).
 
 Documentação: [`jdtalk/jdtalk-main/README.md`](jdtalk/jdtalk-main/README.md)
+
+## Integrações disponíveis
+- **Crefaz**: `POST /integracoes/crefaz/simular`, `POST /integracoes/crefaz/contratar`, `GET /integracoes/crefaz/propostas`
+- **Nexxo**: `POST /integracoes/nexxo/sync`, `GET /integracoes/nexxo/contratos`, `GET /integracoes/nexxo/comissoes`, `GET /integracoes/status`
 
 ## Fluxo de Trabalho
 

@@ -12,6 +12,17 @@ import {
   listMetas,
   getMetaById
 } from "./services/metaService.js";
+import {
+  simularCrefaz,
+  contratarCrefaz,
+  listarPropostasCrefaz
+} from "./services/crefazService.js";
+import {
+  sincronizarNexxo,
+  listarContratosNexxo,
+  listarComissoesNexxo,
+  resumoIntegracoes
+} from "./services/nexxoService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +34,24 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const normaliza = (texto = "") => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const getIntegrationSecret = (integration) => {
+  const config = env.integrations?.[integration] || {};
+  return config.apiKey || config.apiToken || config.webhookSecret || "";
+};
+
+const authorizeIntegration = (integration, req) => {
+  const expected = getIntegrationSecret(integration);
+  if (!expected) return;
+  const provided = req.headers["x-api-key"];
+  if (expected !== provided) {
+    const error = new Error("Chave de integração inválida.");
+    error.status = 401;
+    throw error;
+  }
+};
+
+const actorFromRequest = (req) => req.headers["x-actor"] || req.headers["x-user-email"] || "api";
 
 const toPositiveInteger = (value, fallback = 0) => {
   const parsed = Number.parseInt(value, 10);
@@ -272,6 +301,129 @@ app.get("/api/dashboard", async (_req, res) => {
 
 app.get("/dashboard", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+// --- Integração Crefaz ---
+app.post("/integracoes/crefaz/simular", async (req, res) => {
+  try {
+    authorizeIntegration("crefaz", req);
+    const dados = await simularCrefaz(req.body, actorFromRequest(req));
+    res.status(201).json({ status: "ok", dados });
+  } catch (error) {
+    console.error("Erro ao simular proposta Crefaz:", error);
+    res.status(error.status || 400).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao simular proposta."
+    });
+  }
+});
+
+app.post("/integracoes/crefaz/contratar", async (req, res) => {
+  try {
+    authorizeIntegration("crefaz", req);
+    const proposta = await contratarCrefaz(req.body, actorFromRequest(req));
+    res.json({ status: "ok", dados: proposta });
+  } catch (error) {
+    console.error("Erro ao atualizar proposta Crefaz:", error);
+    res.status(error.status || 400).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao atualizar proposta."
+    });
+  }
+});
+
+app.get("/integracoes/crefaz/propostas", async (req, res) => {
+  try {
+    authorizeIntegration("crefaz", req);
+    const propostas = await listarPropostasCrefaz({
+      status: req.query.status,
+      promotora: req.query.promotora,
+      cliente: req.query.cliente,
+      documento: req.query.documento,
+      dataInicio: req.query.dataInicio,
+      dataFim: req.query.dataFim,
+      limit: req.query.limit,
+      offset: req.query.offset
+    });
+    res.json({ status: "ok", dados: propostas });
+  } catch (error) {
+    console.error("Erro ao consultar propostas Crefaz:", error);
+    res.status(error.status || 500).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao consultar propostas."
+    });
+  }
+});
+
+// --- Integração Nexxo ---
+app.post("/integracoes/nexxo/sync", async (req, res) => {
+  try {
+    authorizeIntegration("nexxo", req);
+    const summary = await sincronizarNexxo(req.body, actorFromRequest(req));
+    res.status(202).json({ status: "ok", dados: summary });
+  } catch (error) {
+    console.error("Erro ao sincronizar dados da Nexxo:", error);
+    res.status(error.status || 500).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao sincronizar dados da Nexxo."
+    });
+  }
+});
+
+app.get("/integracoes/nexxo/contratos", async (req, res) => {
+  try {
+    authorizeIntegration("nexxo", req);
+    const contratos = await listarContratosNexxo({
+      promotora: req.query.promotora,
+      status: req.query.status,
+      produto: req.query.produto,
+      dataInicio: req.query.dataInicio,
+      dataFim: req.query.dataFim,
+      cliente: req.query.cliente,
+      limit: req.query.limit,
+      offset: req.query.offset
+    });
+    res.json({ status: "ok", dados: contratos });
+  } catch (error) {
+    console.error("Erro ao listar contratos da Nexxo:", error);
+    res.status(error.status || 500).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao listar contratos."
+    });
+  }
+});
+
+app.get("/integracoes/nexxo/comissoes", async (req, res) => {
+  try {
+    authorizeIntegration("nexxo", req);
+    const comissoes = await listarComissoesNexxo({
+      referencia: req.query.referencia,
+      promotora: req.query.promotora,
+      produto: req.query.produto,
+      limit: req.query.limit
+    });
+    res.json({ status: "ok", dados: comissoes });
+  } catch (error) {
+    console.error("Erro ao listar comissões da Nexxo:", error);
+    res.status(error.status || 500).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao listar comissões."
+    });
+  }
+});
+
+app.get("/integracoes/status", async (req, res) => {
+  try {
+    authorizeIntegration("nexxo", req); // mesmo token de consulta
+    const resumo = await resumoIntegracoes();
+    res.json({ status: "ok", dados: resumo });
+  } catch (error) {
+    console.error("Erro ao consultar status das integrações:", error);
+    res.status(error.status || 500).json({
+      status: "erro",
+      mensagem: error.message || "Falha ao consultar status das integrações."
+    });
+  }
 });
 
 async function bootstrap() {

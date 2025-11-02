@@ -44,6 +44,17 @@ export const env = {
     ssl: booleanOr(process.env.DB_SSL, false),
     poolMin: numberOr(process.env.DB_POOL_MIN, 0),
     poolMax: numberOr(process.env.DB_POOL_MAX, 10)
+  },
+  integrations: {
+    crefaz: {
+      apiKey: process.env.CREFAZ_API_KEY || "",
+      baseUrl: process.env.CREFAZ_API_BASE_URL || "",
+      webhookSecret: process.env.CREFAZ_WEBHOOK_SECRET || ""
+    },
+    nexxo: {
+      apiToken: process.env.NEXXO_API_TOKEN || "",
+      baseUrl: process.env.NEXXO_API_BASE_URL || ""
+    }
   }
 };
 
