@@ -1,0 +1,15 @@
+{
+  "name": "jdcredvip-workspace",
+  "private": true,
+  "description": "Workspace monorepo para backend jdcredvip-mcp e frontend jdtalk",
+  "scripts": {
+    "start:backend": "npm --prefix jdcredvip-mcp run start",
+    "dev:frontend": "npm --prefix jdtalk/jdtalk-main run dev",
+    "build:frontend": "npm --prefix jdtalk/jdtalk-main run build",
+    "lint:frontend": "npm --prefix jdtalk/jdtalk-main run lint --if-present",
+    "install:all": "npm --prefix jdcredvip-mcp install && npm --prefix jdtalk/jdtalk-main install"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
