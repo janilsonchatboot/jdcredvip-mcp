@@ -1,58 +1,66 @@
-# JD CRED VIP â€“ Full Stack Workspace
+# JD CRED VIP – Full Stack Workspace
 
-Este repositÃ³rio unifica o backend operacional da JD CRED VIP e o frontend/agent do JDTalk. A organizaÃ§Ã£o atual segue uma estrutura de monorepo simples, com cada parte mantendo a sua prÃ³pria documentaÃ§Ã£o e dependÃªncias.
+Este repositório reúne o backend operacional da JD CRED VIP e o frontend/agent do JDTalk. Cada subprojeto mantém suas dependências e documentação próprias dentro do monorepo.
 
 ```
 .
-â”œâ”€â”€ jdcredvip-mcp/   # backend: motor de triagem, automaÃ§Ãµes e serviÃ§os
-â””â”€â”€ jdtalk/          # frontend + agent runtime do JDTalk
++-- jdcredvip-mcp/   # backend: motor de triagem, automações e serviços auxiliares
++-- jdtalk/          # frontend + agent runtime do JDTalk
 ```
 
 ## Projetos
 
-### `jdcredvip-mcp/` â€“ Motor de Triagem e AutomaÃ§Ã£o
-Backend em Node.js (Express + Knex) com scripts auxiliares escritos em ES Modules/Python. Principais recursos:
+### `jdcredvip-mcp/` – Motor de Triagem e Automação
+Backend em Node.js (Express + Knex) com scripts auxiliares (ES Modules/Python). Recursos principais:
 
 - Triagem de clientes (`POST /triagem`) com regras atualizadas de produtos JD CRED VIP.
-- PublicaÃ§Ã£o e consulta de metas (`/api/publicar-meta`, `/api/metas`, `/api/dashboard`), com persistÃªncia em banco relacional (Postgres ou MySQL).
-- Dashboard web em `/dashboard` servindo os Ãºltimos dados publicados.
+- Publicação/consulta de metas (`/api/publicar-meta`, `/api/metas`, `/api/dashboard`) com persistência em banco relacional (Postgres ou MySQL).
+- Dashboard web em `/dashboard` servindo os dados mais recentes.
 - Scripts em `scripts/` para normalizar planilhas, gerar assets de blog e publicar posts via Blogger API.
 
-ðŸ‘‰ DocumentaÃ§Ã£o completa: [`jdcredvip-mcp/README.md`](jdcredvip-mcp/README.md)
+Documentação: [`jdcredvip-mcp/README.md`](jdcredvip-mcp/README.md)
 
-### `jdtalk/` â€“ Plataforma de ComunicaÃ§Ã£o e IA
-AplicaÃ§Ã£o full-stack (React + Express + Drizzle ORM) utilizada pelo time para atendimento e automaÃ§Ãµes com IA. As pastas principais dentro de `jdtalk/jdtalk-main/` sÃ£o:
+### `jdtalk/` – Plataforma de Comunicação e IA
+Aplicação full-stack (React + Express + Drizzle ORM) utilizada pelo time para atendimento e automações com IA. Dentro de `jdtalk/jdtalk-main/`:
 
 - `client/`: frontend em React/Vite.
-- `server/`: backend Node/Express com WebSocket e integraÃ§Ãµes.
-- `agent-runtime/`: agente Codex (Supabase Realtime + OpenAI) com anÃ¡lise automÃ¡tica de extratos INSS.
+- `server/`: backend Node/Express com WebSocket e integrações.
+- `agent-runtime/`: agente Codex (Supabase Realtime + OpenAI) com análise automática de extratos INSS.
 - `shared/`: esquemas e tipos compartilhados (Zod/Drizzle).
 
-ðŸ‘‰ DocumentaÃ§Ã£o completa: [`jdtalk/jdtalk-main/README.md`](jdtalk/jdtalk-main/README.md)
+Documentação: [`jdtalk/jdtalk-main/README.md`](jdtalk/jdtalk-main/README.md)
 
 ## Fluxo de Trabalho
 
-1. **InstalaÃ§Ã£o**  
-   - Backend: `cd jdcredvip-mcp && npm install`  
+1. **Instalação**
+   - Backend: `cd jdcredvip-mcp && npm install`
    - Frontend: `cd jdtalk/jdtalk-main && npm install`
+   - Também é possível usar o `package.json` da raiz: `npm run install:all`
 
-2. **Executar**  
-   - Backend: `npm start` (porta padrÃ£o 8080, ver `.env.example`).  
-   - Frontend/Agent: `npm run dev` ou scripts especÃ­ficos descritos na documentaÃ§Ã£o do JDTalk.
+2. **Executar**
+   - Backend: `npm --prefix jdcredvip-mcp run start` (porta padrão 8080, ver `.env.example`).
+   - Frontend/Agent: `npm --prefix jdtalk/jdtalk-main run dev` (ou os scripts descritos no README do JDTalk).
 
-3. **VariÃ¡veis de ambiente**  
-   - Nunca commitamos arquivos `.env`. Cada projeto possui seu `.env.example` com o que precisa ser preenchido.
-   - Segredos (chaves Google, OpenAI, Hostinger etc.) ficam fora do repositÃ³rio. Utilize os painÃ©is de deploy (Hostinger, Render, Supabase, etc.) para configurÃ¡-los.
+3. **Variáveis de ambiente**
+   - Não versionamos `.env`. Cada projeto traz um `.env.example` com o que precisa ser preenchido.
+   - Segredos (Google, OpenAI, Hostinger etc.) devem ser cadastrados apenas nos painéis de deploy ou cofres secretos.
 
-4. **Deploy**  
-   - Hostinger (backend): configurar o diretÃ³rio de execuÃ§Ã£o como `jdcredvip-mcp/`, rodar `npm install` e `npm start`.
-   - Frontend: seguir a estratÃ©gia do ambiente em que serÃ¡ servido (Vite build, Supabase Functions, etc.).
-   - Postman/Testing: com o backend ativo, configure ambientes com as variÃ¡veis e o host em produÃ§Ã£o para validar os endpoints.
+4. **Deploy**
+   - Hostinger (backend): aponte o diretório de execução para `jdcredvip-mcp/`, rode `npm install` e `npm start`.
+   - Frontend: gere build Vite e publique no serviço escolhido (Supabase, Vercel, etc.).
+   - QA/Postman: configure um ambiente com o host em produção para validar os endpoints.
+   - Guia detalhado: [`docs/deploy-hostinger.md`](docs/deploy-hostinger.md)
 
-## ConvenÃ§Ãµes e Git
+## Convenções e Git
 
-- NÃ£o versionamos dados sensÃ­veis (planilhas reais, CSVs operacionais, PDFs internos, chaves JSON). Eles permanecerÃ£o fora do Git.
-- O `.gitignore` foi atualizado para cobrir dist, logs e diretÃ³rios temporÃ¡rios gerados durante o desenvolvimento.
-- ApÃ³s mudanÃ§as substanciais, favor atualizar tambÃ©m os READMEs especÃ­ficos.
+- Arquivos sensíveis (planilhas, CSVs operacionais, PDFs internos, chaves JSON) continuam fora do repositório.
+- O `.gitignore` cobre dist, caches, segredos e diretórios temporários gerados durante o desenvolvimento.
+- Para comandos combinados há o `package.json` na raiz (ex.: `npm run start:backend`, `npm run dev:frontend`).
 
-Sinta-se Ã  vontade para abrir issues ou pull requests quando ajustes forem necessÃ¡rios. A meta do repositÃ³rio Ã© manter backend e frontend sincronizados para evoluÃ§Ãµes rÃ¡pidas e deploys confiÃ¡veis. Vamos em frente! ðŸ’¼ðŸš€
+## Próximos Passos
+
+1. Configure as variáveis de ambiente no Hostinger/Supabase conforme o guia em `docs/deploy-hostinger.md`.
+2. Utilize o Postman com os novos tokens para validar os endpoints em produção.
+3. Opcional: crie tags ou releases quando concluir milestones importantes do monorepo.
+
+Vamos em frente! ????

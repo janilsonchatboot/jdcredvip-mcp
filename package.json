@@ -1,23 +1,15 @@
 {
-  "name": "jd-cred-vip",
-  "version": "1.0.0",
-  "description": "API local para triagem de clientes JD CRED VIP",
-  "type": "module",
-  "main": "src/index.js",
+  "name": "jdcredvip-workspace",
+  "private": true,
+  "description": "Workspace monorepo para backend jdcredvip-mcp e frontend jdtalk",
   "scripts": {
-    "start": "node src/server.js",
-    "api": "node src/server.js",
-    "dashboard:pull": "node scripts/fetch-dashboard.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:backend": "npm --prefix jdcredvip-mcp run start",
+    "dev:frontend": "npm --prefix jdtalk/jdtalk-main run dev",
+    "build:frontend": "npm --prefix jdtalk/jdtalk-main run build",
+    "lint:frontend": "npm --prefix jdtalk/jdtalk-main run lint --if-present",
+    "install:all": "npm --prefix jdcredvip-mcp install && npm --prefix jdtalk/jdtalk-main install"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "body-parser": "^2.2.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "googleapis": "^164.1.0"
+  "engines": {
+    "node": ">=18"
   }
 }
