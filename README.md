@@ -51,6 +51,10 @@ Documentação: [`jdtalk/jdtalk-main/README.md`](jdtalk/jdtalk-main/README.md)
    - QA/Postman: configure um ambiente com o host em produção para validar os endpoints.
    - Guia detalhado: [`docs/deploy-hostinger.md`](docs/deploy-hostinger.md)
 
+## Documentação adicional
+- Checklist de endpoints: [`docs/jdcredvip-endpoints-checklist.md`](docs/jdcredvip-endpoints-checklist.md)
+- Material legado/auxiliar: [`docs/legacy/`](docs/legacy/)
+
 ## Convenções e Git
 
 - Arquivos sensíveis (planilhas, CSVs operacionais, PDFs internos, chaves JSON) continuam fora do repositório.
