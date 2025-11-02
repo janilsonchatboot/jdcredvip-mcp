@@ -1,2 +1,28 @@
-node_modules
+# Node / build artifacts
+node_modules/
+dist/
+build/
+
+# Environment files
 .env
+*.env.local
+
+# Backend (jdcredvip-mcp)
+jdcredvip-mcp/.env
+jdcredvip-mcp/node_modules/
+jdcredvip-mcp/venv/
+jdcredvip-mcp/config/service-account.json
+jdcredvip-mcp/config/*.json
+jdcredvip-mcp/client_secrets.json
+jdcredvip-mcp/client_secret_*.json
+jdcredvip-mcp/automacoes/secrets/
+
+# Frontend (jdtalk)
+jdtalk/.env
+jdtalk/node_modules/
+jdtalk/jdtalk-main/agent-runtime/*.log
+*.tmp
+tree_staged.txt
+tree_no_venv.txt
+jdcredvip-mcp/temp_fgts.txt
+jdcredvip-mcp/senha.txt

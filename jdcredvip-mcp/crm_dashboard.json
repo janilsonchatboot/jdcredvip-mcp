@@ -1,0 +1,52 @@
+﻿{
+    "Metrics":  {
+                    "total_contratos":  386,
+                    "volume_bruto":  914427.33000000054,
+                    "comissao_total":  18654.530000000002,
+                    "volume_liquido":  748984.01
+                },
+    "Products":  [
+                     {
+                         "Produto":  "INSS",
+                         "Qtde":  108,
+                         "VolumeLiquido":  514435.73000000027,
+                         "VolumeBruto":  677750.48000000021,
+                         "Comissao":  7220.2500000000009
+                     },
+                     {
+                         "Produto":  "FGTS – Saque-aniversário",
+                         "Qtde":  214,
+                         "VolumeLiquido":  170218.87999999998,
+                         "VolumeBruto":  171133.51,
+                         "Comissao":  8229.9799999999977
+                     },
+                     {
+                         "Produto":  "Trabalhador CLT",
+                         "Qtde":  10,
+                         "VolumeLiquido":  16546.670000000002,
+                         "VolumeBruto":  16528.45,
+                         "Comissao":  439.24
+                     },
+                     {
+                         "Produto":  "Bolsa Família",
+                         "Qtde":  28,
+                         "VolumeLiquido":  17443.990000000005,
+                         "VolumeBruto":  18676.150000000005,
+                         "Comissao":  1123.4599999999998
+                     },
+                     {
+                         "Produto":  "Conta de Luz",
+                         "Qtde":  24,
+                         "VolumeLiquido":  26400,
+                         "VolumeBruto":  26400,
+                         "Comissao":  909
+                     },
+                     {
+                         "Produto":  "Crédito Pessoal",
+                         "Qtde":  2,
+                         "VolumeLiquido":  3938.7400000000002,
+                         "VolumeBruto":  3938.7400000000002,
+                         "Comissao":  732.59999999999991
+                     }
+                 ]
+}
