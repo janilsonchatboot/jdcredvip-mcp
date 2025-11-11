@@ -12,7 +12,8 @@ import {
   insertUserSchema
 } from "@shared/schema";
 import { z } from "zod";
-import { WebSocketServer } from "ws";
+import { randomBytes } from "node:crypto";
+import WebSocket, { WebSocketServer } from "ws";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -27,15 +28,41 @@ import { signJwt, verifyJwt } from "./utils/jwt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  const sessionSecret =
-    process.env.SESSION_SECRET ?? "dev-session-secret-change-me";
-  const jwtSecret = process.env.AUTH_JWT_SECRET ?? sessionSecret;
-  const refreshSecret = process.env.AUTH_REFRESH_SECRET ?? `${jwtSecret}-refresh`;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const ensureSecret = (
+    value: string | undefined,
+    name: string,
+    fallback?: () => string
+  ): string => {
+    const normalized = value?.trim();
+    if (normalized) {
+      return normalized;
+    }
+
+    if (isProduction) {
+      throw new Error(`${name} must be configured when NODE_ENV=production`);
+    }
+
+    return fallback ? fallback() : randomBytes(32).toString("hex");
+  };
+
+  const sessionSecret = ensureSecret(process.env.SESSION_SECRET, "SESSION_SECRET");
+  const jwtSecret = ensureSecret(
+    process.env.AUTH_JWT_SECRET,
+    "AUTH_JWT_SECRET",
+    () => sessionSecret
+  );
+  const refreshSecret = ensureSecret(
+    process.env.AUTH_REFRESH_SECRET,
+    "AUTH_REFRESH_SECRET",
+    () => `${jwtSecret}-refresh`
+  );
   const accessExpiresIn = Number(process.env.AUTH_JWT_TTL ?? 60 * 60); // 1h
   const refreshExpiresIn = Number(
     process.env.AUTH_REFRESH_TTL ?? 60 * 60 * 24 * 7
   ); // 7d
-  const isProduction = process.env.NODE_ENV === "production";
+  
   
   // Serve static demo page from the public directory
   app.use("/", express.static("public"));
@@ -51,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup WebSocket server
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  const clients = new Map();
+  const clients = new Map<string, WebSocket>();
   
   wss.on("connection", (ws) => {
     console.log("WebSocket client connected");
@@ -475,90 +502,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/auth/refresh", async (req, res) => {
-    try {
-      const { refresh_token } = req.body;
-      
-      if (!refresh_token) {
-        return res.status(400).json({ message: "Token de renovação é obrigatório" });
-      }
-      
-      // Chamar o endpoint do WordPress para renovar o token
-      const wpUrl = process.env.WORDPRESS_URL || "";
-      
-      // Se estamos em modo desenvolvimento sem WordPress
-      if (!wpUrl) {
-        // Simulação básica para desenvolvimento
-        try {
-          // Formato básico do JWT: header.payload.signature
-          const parts = refresh_token.split('.');
-          if (parts.length !== 3) {
-            return res.status(401).json({ message: "Token de renovação inválido" });
-          }
-          
-          // Decode payload (parte do meio)
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-          const now = Math.floor(Date.now() / 1000);
-          
-          if (payload.exp <= now) {
-            return res.status(401).json({ message: "Token de renovação expirado" });
-          }
-          
-          if (payload.type !== 'refresh') {
-            return res.status(400).json({ message: "Tipo de token inválido" });
-          }
-          
-          // Em desenvolvimento, gerar um novo token simulado
-          const newToken = `header.${Buffer.from(JSON.stringify({
-            iss: "dev",
-            iat: now,
-            exp: now + 3600,
-            user_id: payload.user_id,
-            username: "admin",
-            display_name: "Administrador"
-          })).toString('base64')}.signature`;
-          
-          const newRefreshToken = `header.${Buffer.from(JSON.stringify({
-            iss: "dev",
-            iat: now,
-            exp: now + 86400,
-            user_id: payload.user_id,
-            type: "refresh"
-          })).toString('base64')}.signature`;
-          
-          return res.json({
-            success: true,
-            message: "Token renovado com sucesso",
-            token: newToken,
-            refresh_token: newRefreshToken,
-            expires_in: 3600,
-            refresh_expires_in: 86400
-          });
-        } catch (error) {
-          return res.status(401).json({ message: "Token de renovação inválido" });
-        }
-      }
-      
-      // Em produção, usa o endpoint do WordPress
-      const response = await fetch(`${wpUrl}/wp-json/jdtalk/v1/token/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token })
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        return res.status(response.status).json(data);
-      }
-      
-      return res.json(data);
-    } catch (error) {
-      console.error("Token refresh error:", error);
-      return res.status(500).json({ message: "Erro ao renovar token" });
-    }
-  });
-
   // User administration
   app.get("/api/users", isAuthenticated, async (_req, res) => {
     try {
