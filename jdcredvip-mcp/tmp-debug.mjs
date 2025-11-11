@@ -1,0 +1,10 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { importarBase64 } from "./services/import.service.js";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const filePath = path.resolve('D:/JD-CRED-VIP-secrets/JD_CRED_VIP_fgts_saque_aniversario.csv');
+const data = fs.readFileSync(filePath, { encoding: 'base64' });
+const result = await importarBase64(data, { filename: path.basename(filePath), promotora: 'WorkBank', persist: false, actor: 'debug' });
+console.log(Object.keys(result));

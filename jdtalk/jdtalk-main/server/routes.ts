@@ -8,8 +8,10 @@ import {
   loginSchema, 
   insertMessageSchema, 
   insertTicketSchema, 
-  insertCustomerSchema 
+  insertCustomerSchema,
+  insertUserSchema
 } from "@shared/schema";
+import { z } from "zod";
 import { WebSocketServer } from "ws";
 import session from "express-session";
 import passport from "passport";
@@ -20,11 +22,19 @@ import { registerPipelineRoutes } from './routes/pipeline';
 import { registerExportRoutes } from './routes/export';
 import { registerTemplateRoutes } from './routes/templates';
 import pluginsRouter from './routes/plugins';
+import { hashPassword, verifyPassword } from "./utils/password";
+import { signJwt, verifyJwt } from "./utils/jwt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   const sessionSecret =
     process.env.SESSION_SECRET ?? "dev-session-secret-change-me";
+  const jwtSecret = process.env.AUTH_JWT_SECRET ?? sessionSecret;
+  const refreshSecret = process.env.AUTH_REFRESH_SECRET ?? `${jwtSecret}-refresh`;
+  const accessExpiresIn = Number(process.env.AUTH_JWT_TTL ?? 60 * 60); // 1h
+  const refreshExpiresIn = Number(
+    process.env.AUTH_REFRESH_TTL ?? 60 * 60 * 24 * 7
+  ); // 7d
   const isProduction = process.env.NODE_ENV === "production";
   
   // Serve static demo page from the public directory
@@ -111,12 +121,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!user) {
           return done(null, false, { message: "Incorrect username." });
         }
-        
-        // In a real app, we would hash the password
-        if (user.password !== password) {
+
+        const verification = verifyPassword(user.password, password);
+        if (!verification.valid) {
           return done(null, false, { message: "Incorrect password." });
         }
-        
+
+        if (verification.needsRehash) {
+          const hashed = hashPassword(password);
+          await storage.updateUserPassword(user.id, hashed);
+          user.password = hashed;
+        }
+
         return done(null, user);
       } catch (err) {
         return done(err);
@@ -137,15 +153,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Authentication middleware
-  const isAuthenticated = (req: Request, res: Response, next: Function) => {
-    if (req.isAuthenticated()) {
-      return next();
+  const extractBearerToken = (req: Request): string | null => {
+    const authHeader = (req.headers.authorization ||
+      (req.headers as Record<string, unknown>)?.Authorization) as string | undefined;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      return authHeader.slice(7).trim();
     }
-    res.status(401).json({ message: "Unauthorized" });
+    const headerToken = req.headers["x-access-token"];
+    if (typeof headerToken === "string" && headerToken.length > 0) {
+      return headerToken;
+    }
+    return null;
   };
 
+  const resolveUserFromToken = async (req: Request) => {
+    const token = extractBearerToken(req);
+    if (!token) {
+      return null;
+    }
+
+    const verification = verifyJwt(token, jwtSecret);
+    if (!verification.valid || !verification.payload?.sub) {
+      return null;
+    }
+
+    const userId = Number(verification.payload.sub);
+    if (!Number.isFinite(userId)) {
+      return null;
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return null;
+    }
+
+    req.user = user as any;
+    return user;
+  };
+
+  // Authentication middleware
+  const isAuthenticated = (req: Request, res: Response, next: Function) => {
+    if (req.isAuthenticated() && req.user) {
+      return next();
+    }
+
+    resolveUserFromToken(req)
+      .then((user) => {
+        if (user) {
+          return next();
+        }
+        res.status(401).json({ message: "Unauthorized" });
+      })
+      .catch((error) => next(error));
+  };
+
+  const requireRole =
+    (...roles: string[]) =>
+    (req: Request, res: Response, next: Function) => {
+      const ensureAccess = (user: any) => {
+        if (!user) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!roles.length) {
+          return next();
+        }
+        const currentRole = user?.role ?? "agent";
+        if (!roles.includes(String(currentRole))) {
+          return res.status(403).json({ message: "Acesso restrito." });
+        }
+        return next();
+      };
+
+      if (req.isAuthenticated() && req.user) {
+        return ensureAccess(req.user);
+      }
+
+      resolveUserFromToken(req)
+        .then((user) => ensureAccess(user))
+        .catch((error) => next(error));
+    };
+
+  const sanitizeUser = (user: any) => {
+    if (!user) return null;
+    // Evita expor hashes de senha
+    const { password, ...publicUser } = user;
+    return publicUser;
+  };
+
+  const createUserSchema = insertUserSchema.extend({
+    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  });
+
+  const updateUserSchema = z
+    .object({
+      displayName: z.string().min(1, "Nome obrigatório").optional(),
+      role: z.string().min(1, "Perfil obrigatório").optional(),
+      password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").optional(),
+    })
+    .refine(
+      (data) => data.displayName || data.role || data.password,
+      { message: "Nenhum campo informado para atualização." }
+    );
+
+  const changePasswordSchema = z.object({
+    currentPassword: z.string().min(1, "A senha atual é obrigatória"),
+    newPassword: z.string().min(6, "A nova senha deve ter pelo menos 6 caracteres"),
+  });
+
   // Auth routes
+  const issueTokens = (user: any) => {
+    const access = signJwt(
+      {
+        sub: user.id,
+        role: user.role,
+        username: user.username,
+        displayName: user.displayName,
+      },
+      jwtSecret,
+      { expiresInSeconds: accessExpiresIn }
+    );
+
+    const refresh = signJwt(
+      {
+        sub: user.id,
+        type: "refresh",
+      },
+      refreshSecret,
+      { expiresInSeconds: refreshExpiresIn }
+    );
+
+    return {
+      token: access.token,
+      refreshToken: refresh.token,
+      expiresIn: accessExpiresIn,
+      refreshExpiresIn,
+    };
+  };
+
   app.post("/api/auth/login", (req, res, next) => {
     try {
       const { username, password } = loginSchema.parse(req.body);
@@ -163,11 +307,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return next(err);
           }
           
+          const tokens = issueTokens(user);
+
           return res.json({ 
             id: user.id, 
             username: user.username, 
             displayName: user.displayName, 
-            role: user.role 
+            role: user.role,
+            token: tokens.token,
+            refreshToken: tokens.refreshToken,
+            refresh_token: tokens.refreshToken,
+            expiresIn: tokens.expiresIn,
+            expires_in: tokens.expiresIn,
+            refreshExpiresIn: tokens.refreshExpiresIn,
+            refresh_expires_in: tokens.refreshExpiresIn,
           });
         });
       })(req, res, next);
@@ -184,6 +337,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/me", isAuthenticated, (req, res) => {
     res.json(req.user);
+  });
+
+  app.post("/api/auth/refresh", async (req, res) => {
+    const refreshToken =
+      req.body?.refresh_token ??
+      req.body?.refreshToken ??
+      req.headers["x-refresh-token"];
+
+    if (!refreshToken || typeof refreshToken !== "string") {
+      return res.status(400).json({ message: "Refresh token obrigatorio." });
+    }
+
+    const result = verifyJwt(refreshToken, refreshSecret);
+    if (!result.valid || !result.payload?.sub) {
+      return res.status(401).json({ message: "Refresh token invalido ou expirado." });
+    }
+
+    const userId = Number(result.payload.sub);
+    if (!Number.isFinite(userId)) {
+      return res.status(401).json({ message: "Refresh token invalido." });
+    }
+
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuario nao encontrado." });
+      }
+
+      const tokens = issueTokens(user);
+      res.json({
+        token: tokens.token,
+        refresh_token: tokens.refreshToken,
+        refreshToken: tokens.refreshToken,
+        expires_in: tokens.expiresIn,
+        refresh_expires_in: tokens.refreshExpiresIn,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Falha ao renovar token." });
+    }
+  });
+
+  app.post("/api/auth/change-password", isAuthenticated, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+      const userId = (req.user as any)?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(Number(userId));
+      if (!user) {
+        return res.status(404).json({ message: "Usuario nao encontrado." });
+      }
+
+      const verification = verifyPassword(user.password, currentPassword);
+      if (!verification.valid) {
+        return res.status(400).json({ message: "Senha atual incorreta." });
+      }
+
+      const hashed = hashPassword(newPassword);
+      await storage.updateUserPassword(user.id, hashed);
+
+      res.json({ message: "Senha atualizada com sucesso." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstIssue = error.issues?.[0];
+        return res.status(400).json({ message: firstIssue?.message ?? "Dados inválidos." });
+      }
+      res.status(500).json({ message: "Falha ao alterar senha." });
+    }
   });
   
   // WordPress JWT Authentication
@@ -332,6 +556,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Token refresh error:", error);
       return res.status(500).json({ message: "Erro ao renovar token" });
+    }
+  });
+
+  // User administration
+  app.get("/api/users", isAuthenticated, async (_req, res) => {
+    try {
+      const users = await storage.listUsers();
+      res.json(users.map(sanitizeUser));
+    } catch (error) {
+      console.error("Erro ao listar usuários:", error);
+      res.status(500).json({ message: "Falha ao listar usuários." });
+    }
+  });
+
+  app.post("/api/users", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const payload = createUserSchema.parse(req.body);
+      const newUser = await storage.createUser(payload);
+      res.status(201).json(sanitizeUser(newUser));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstIssue = error.issues?.[0];
+        return res.status(400).json({ message: firstIssue?.message ?? "Dados inválidos." });
+      }
+      console.error("Erro ao criar usuário:", error);
+      res.status(500).json({ message: "Falha ao criar usuário." });
+    }
+  });
+
+  app.patch("/api/users/:id", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      if (!Number.isFinite(userId)) {
+        return res.status(400).json({ message: "ID inválido." });
+      }
+
+      const payload = updateUserSchema.parse(req.body);
+      const { password, ...data } = payload;
+
+      let updatedUser = null;
+      if (data.displayName || data.role) {
+        updatedUser = await storage.updateUser(userId, data);
+      } else {
+        updatedUser = await storage.getUser(userId);
+      }
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Usuário não encontrado." });
+      }
+
+      if (password) {
+        await storage.updateUserPassword(userId, hashPassword(password));
+      }
+
+      const refreshedUser = await storage.getUser(userId);
+      res.json(sanitizeUser(refreshedUser ?? updatedUser));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstIssue = error.issues?.[0];
+        return res.status(400).json({ message: firstIssue?.message ?? "Dados inválidos." });
+      }
+      console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ message: "Falha ao atualizar usuário." });
+    }
+  });
+
+  app.delete("/api/users/:id", isAuthenticated, requireRole("admin"), async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      if (!Number.isFinite(userId)) {
+        return res.status(400).json({ message: "ID inválido." });
+      }
+
+      if ((req.user as any)?.id === userId) {
+        return res.status(400).json({ message: "Não é possível remover o próprio usuário." });
+      }
+
+      const deleted = await storage.deleteUser(userId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Usuário não encontrado." });
+      }
+
+      res.json({ message: "Usuário removido com sucesso." });
+    } catch (error) {
+      console.error("Erro ao remover usuário:", error);
+      res.status(500).json({ message: "Falha ao remover usuário." });
     }
   });
 

@@ -1,0 +1,255 @@
+{
+  "project": {
+    "name": "JD CRED VIP CRM",
+    "version": "3.04",
+    "description": "Frontend CRM JD CRED VIP com triagem dinâmica e importação de relatórios de promotoras.",
+    "branding": {
+      "logo": "/assets/logo-jdcredvip.svg",
+      "slogan": "Fé que constrói, visão que realiza!",
+      "colors": {
+        "primary": "#FFA500",
+        "secondary": "#89CFF0",
+        "background": "#FFFFFF",
+        "text": "#333333"
+      }
+    },
+    "changelog": [
+      "Triagem dinâmica com produtos do MCP",
+      "Novo módulo de importação de relatórios",
+      "Atualização de dependências produtos/bancos/promotoras",
+      "Dashboard inclui dados importados"
+    ]
+  },
+  "layout": {
+    "menu": [
+      {
+        "label": "Dashboard",
+        "path": "/crm/dashboard",
+        "icon": "BarChart"
+      },
+      {
+        "label": "Clientes",
+        "path": "/crm/clientes",
+        "icon": "Users"
+      },
+      {
+        "label": "Contratos",
+        "path": "/crm/contratos",
+        "icon": "FileText"
+      },
+      {
+        "label": "Follow-ups",
+        "path": "/crm/followups",
+        "icon": "PhoneCall"
+      },
+      {
+        "label": "Metas",
+        "path": "/crm/metas",
+        "icon": "Target"
+      },
+      {
+        "label": "Ranking",
+        "path": "/crm/ranking",
+        "icon": "Award"
+      },
+      {
+        "label": "Importação",
+        "path": "/crm/importacao",
+        "icon": "Upload"
+      },
+      {
+        "label": "Configurações",
+        "icon": "Settings",
+        "submenu": [
+          {
+            "label": "Bancos",
+            "path": "/crm/configuracoes/bancos"
+          },
+          {
+            "label": "Promotoras",
+            "path": "/crm/configuracoes/promotoras"
+          },
+          {
+            "label": "Produtos",
+            "path": "/crm/configuracoes/produtos"
+          }
+        ]
+      },
+      {
+        "label": "IA / Triagem",
+        "path": "/crm/triagem",
+        "icon": "Cpu"
+      }
+    ],
+    "footer": "JD CRED VIP CRM v3.04 © 2025 — Fé que constrói, visão que realiza!"
+  },
+  "modules": {
+    "dashboard": {
+      "endpoint": "/dashboard/resumo",
+      "charts": [
+        "bar_produtos",
+        "pie_promotoras",
+        "bar_bancos",
+        "line_tempo"
+      ],
+      "metrics": [
+        "totalContratos",
+        "volumeBruto",
+        "volumeLiquido",
+        "comissaoTotal",
+        "volumeImportado",
+        "comissaoImportada",
+        "promotorasAtivas"
+      ]
+    },
+    "triagem": {
+      "endpoint": "/triagem",
+      "dependencies": [
+        "produtos"
+      ],
+      "ui": {
+        "dynamicProducts": true,
+        "form": "autoSwitchGrid"
+      }
+    },
+    "importacao": {
+      "endpoint": "/importar-relatorio",
+      "allowedFormats": [
+        ".csv",
+        ".xlsx"
+      ],
+      "description": "Importação de relatórios das promotoras (Nexxo, WorkBank, Yuppie).",
+      "ui": {
+        "title": "Importação de Relatórios",
+        "fields": [
+          {
+            "name": "file",
+            "type": "file",
+            "label": "Selecione o arquivo"
+          },
+          {
+            "name": "promotora",
+            "type": "auto",
+            "source": "filename"
+          }
+        ],
+        "buttons": [
+          {
+            "label": "Processar",
+            "action": "upload"
+          }
+        ]
+      }
+    },
+    "clientes": {
+      "endpoint": "/clientes",
+      "status": "placeholder"
+    },
+    "contratos": {
+      "endpoint": "/contratos",
+      "status": "placeholder"
+    },
+    "followups": {
+      "endpoint": "/followups",
+      "status": "placeholder"
+    },
+    "metas": {
+      "endpoint": "/api/metas",
+      "publish": "/api/publicar-meta"
+    },
+    "ranking": {
+      "endpoint": "/dashboard/ranking"
+    },
+    "configuracoes": {
+      "bancos": {
+        "endpoint": "/bancos"
+      },
+      "promotoras": {
+        "endpoint": "/promotoras"
+      },
+      "produtos": {
+        "endpoint": "/produtos"
+      }
+    }
+  },
+  "relations": {
+    "produtos": [
+      "triagem",
+      "contratos",
+      "metas"
+    ],
+    "bancos": [
+      "contratos",
+      "ranking"
+    ],
+    "promotoras": [
+      "contratos",
+      "importacao"
+    ]
+  },
+  "permissions": {
+    "roles": [
+      "admin",
+      "promotor"
+    ],
+    "admin": {
+      "access": [
+        "bancos",
+        "promotoras",
+        "produtos",
+        "metas",
+        "configuracoes",
+        "dashboard",
+        "ranking",
+        "clientes",
+        "contratos",
+        "followups",
+        "importacao",
+        "triagem"
+      ]
+    },
+    "promotor": {
+      "access": [
+        "clientes",
+        "contratos",
+        "followups",
+        "dashboard",
+        "ranking",
+        "metas",
+        "triagem"
+      ]
+    }
+  },
+  "integrations": {
+    "nexxo": {
+      "statusEndpoint": "/integracoes/nexxo/sync"
+    },
+    "workbank": {
+      "statusEndpoint": "/integracoes/workbank/sync"
+    },
+    "crefaz": {
+      "simulate": "/integracoes/crefaz/simular",
+      "contract": "/integracoes/crefaz/contratar"
+    }
+  },
+  "security": {
+    "authentication": "JWT",
+    "headers": {
+      "Authorization": "Bearer <token>"
+    }
+  },
+  "realtime": {
+    "provider": "supabase",
+    "channels": [
+      "clientes",
+      "contratos",
+      "followups",
+      "metas"
+    ],
+    "events": [
+      "INSERT",
+      "UPDATE",
+      "DELETE"
+    ]
+  }
+}

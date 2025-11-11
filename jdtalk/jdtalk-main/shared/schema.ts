@@ -18,6 +18,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 });
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Customer schema
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
@@ -149,6 +160,8 @@ export type TicketWithDetails = Ticket & {
   assignedTo?: User;
   orders?: Order[];
 };
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 
 // Auth types
 export const loginSchema = z.object({

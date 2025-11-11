@@ -19,7 +19,7 @@ Backend em Node.js (Express + Knex) com scripts auxiliares (ES Modules/Python). 
 - Scripts em `scripts/` para normalizar planilhas, gerar assets de blog e publicar posts via Blogger API.
 - Integrações Crefaz/Nexxo com armazenamento próprio para propostas, contratos e comissões.
 
-Documentação: [`jdcredvip-mcp/README.md`](jdcredvip-mcp/README.md)
+Documenta??o: [`jdcredvip-mcp/README.md`](jdcredvip-mcp/README.md) + guia modular em [`docs/jdcredvip-modulos.md`](docs/jdcredvip-modulos.md)
 
 ### `jdtalk/` – Plataforma de Comunicação e IA
 Aplicação full-stack (React + Express + Drizzle ORM) utilizada pelo time para atendimento e automações com IA. Dentro de `jdtalk/jdtalk-main/`:
@@ -56,9 +56,18 @@ Documentação: [`jdtalk/jdtalk-main/README.md`](jdtalk/jdtalk-main/README.md)
    - QA/Postman: configure um ambiente com o host em produção para validar os endpoints.
    - Guia detalhado: [`docs/deploy-hostinger.md`](docs/deploy-hostinger.md)
 
-## Documentação adicional
+## Documentaýýo adicional
 - Checklist de endpoints: [`docs/jdcredvip-endpoints-checklist.md`](docs/jdcredvip-endpoints-checklist.md)
 - Material legado/auxiliar: [`docs/legacy/`](docs/legacy/)
+- Observabilidade: logs de atividade ficam em `activity_logs` (ver seýýo abaixo).
+- Importação de relatórios: consulte os endpoints /import/upload, /import/analisar e /import/historico.
+
+## Observabilidade e Logs
+
+- Toda requisiýýo tratada pelo backend gera um registro em `activity_logs`, incluindo rota, mýtodo, status HTTP, usuýrio (quando autenticado), origem (frontend, Postman, API) e um resumo sanitizado do payload.
+- Os logs podem ser consultados direto no banco (`SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 50;`) ou exportados para BI.
+- Campos sensýveis (password, token, secret etc.) sýo automaticamente mascarados e cargas extensas sýo truncadas para manter o banco enxuto.
+- Utilize esse histýrico para depurar operaýýes vindas do frontend (ex.: criaýýo de clientes, triagem, importaýýes) antes de atuar nos serviýos.
 
 ## Convenções e Git
 

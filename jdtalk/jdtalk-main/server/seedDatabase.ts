@@ -8,6 +8,7 @@ import {
   orders
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { hashPassword } from "./utils/password";
 
 /**
  * Seeds the database with initial data
@@ -24,11 +25,12 @@ export async function seedDatabase() {
     }
     
     // Create initial agent user
+    const agentPassword = hashPassword("agent123");
     const [agent] = await db.insert(users).values({
       username: "agent",
       displayName: "Support Agent",
-      password: "agent123",
-      role: "agent"
+      password: agentPassword,
+      role: "admin"
     }).returning();
     console.log("Created agent:", agent.username);
     

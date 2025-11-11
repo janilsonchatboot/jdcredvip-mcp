@@ -1,0 +1,226 @@
+{
+  "project": {
+    "name": "JD CRED VIP CRM",
+    "version": "3.03",
+    "description": "Plataforma completa de gestão de carteira, automação e triagem IA da JD CRED VIP",
+    "branding": {
+      "logo": "/assets/logo-jdcredvip.svg",
+      "colors": {
+        "primary": "#FFA500",
+        "secondary": "#89CFF0",
+        "background": "#FFFFFF",
+        "text": "#333333"
+      },
+      "slogan": "Fé que constrói, visão que realiza!"
+    }
+  },
+
+  "layout": {
+    "menu": [
+      { "label": "Dashboard", "path": "/crm/dashboard", "icon": "BarChart" },
+      { "label": "Clientes", "path": "/crm/clientes", "icon": "Users" },
+      { "label": "Contratos", "path": "/crm/contratos", "icon": "FileText" },
+      { "label": "Follow-ups", "path": "/crm/followups", "icon": "PhoneCall" },
+      { "label": "Metas", "path": "/crm/metas", "icon": "Target" },
+      { "label": "Ranking", "path": "/crm/ranking", "icon": "Award" },
+      { "label": "Configurações", "path": "/crm/configuracoes", "icon": "Settings" },
+      { "label": "IA / Triagem", "path": "/crm/triagem", "icon": "Cpu" }
+    ],
+    "footer": {
+      "text": "JD CRED VIP CRM v3.03 © 2025 — Fé que constrói, visão que realiza!"
+    }
+  },
+
+  "modules": {
+    "dashboard": {
+      "endpoint": "/dashboard/resumo",
+      "components": ["cards", "charts", "ranking", "metasResumo"],
+      "cards": [
+        { "label": "Contratos Ativos", "field": "totalContratos" },
+        { "label": "Volume Bruto", "field": "volumeBruto", "format": "currency" },
+        { "label": "Volume Líquido", "field": "volumeLiquido", "format": "currency" },
+        { "label": "Comissões Totais", "field": "comissaoTotal", "format": "currency" }
+      ],
+      "charts": [
+        { "type": "bar", "title": "Volume por Produto", "source": "produtos" },
+        { "type": "pie", "title": "Distribuição por Promotora", "source": "promotoras" },
+        { "type": "bar", "title": "Volume por Banco", "source": "bancos" },
+        { "type": "line", "title": "Evolução Semanal de Contratos", "source": "datas" }
+      ],
+      "metrics": [
+        { "name": "Ticket Médio", "formula": "volumeLiquido / totalContratos" },
+        { "name": "Taxa de Conversão", "endpoint": "/dashboard/conversao" },
+        { "name": "Ranking de Promotores", "endpoint": "/dashboard/ranking" },
+        { "name": "Ranking de Bancos", "endpoint": "/dashboard/resumo" }
+      ]
+    },
+
+    "clientes": {
+      "endpoint": "/clientes",
+      "fields": [
+        "nome", "cpf", "telefone", "cidade", "uf",
+        "produto", "promotora", "banco", "status", "created_at"
+      ],
+      "filters": ["produto", "promotora", "banco", "status", "uf"],
+      "actions": {
+        "create": { "method": "POST", "path": "/clientes" },
+        "update": { "method": "PUT", "path": "/clientes/:id" },
+        "delete": { "method": "DELETE", "path": "/clientes/:id" }
+      },
+      "related": {
+        "contratos": "/contratos?cliente_id=:id",
+        "followups": "/followups?cliente_id=:id"
+      }
+    },
+
+    "contratos": {
+      "endpoint": "/contratos",
+      "fields": [
+        "cliente", "produto", "promotora", "banco",
+        "valor_liquido", "comissao", "status", "data_pagamento"
+      ],
+      "filters": ["produto", "promotora", "banco", "status", "data_pagamento"],
+      "metrics": [
+        "volumePorProduto", "volumePorBanco", "ticketMedio", "taxaSucesso"
+      ],
+      "actions": {
+        "updateStatus": { "method": "PUT", "path": "/contratos/:id" },
+        "sync": { "method": "POST", "path": "/contratos/sincronizar" }
+      }
+    },
+
+    "followups": {
+      "endpoint": "/followups",
+      "fields": [
+        "cliente", "descricao", "data_agendada", "status"
+      ],
+      "filters": ["status", "data_agendada"],
+      "actions": {
+        "create": { "method": "POST", "path": "/followups" },
+        "update": { "method": "PUT", "path": "/followups/:id" },
+        "autoGenerate": { "method": "POST", "path": "/followups/gerar" }
+      }
+    },
+
+    "metas": {
+      "endpoint": "/api/metas",
+      "publish": "/api/publicar-meta",
+      "fields": [
+        "titulo", "dataReferencia", "publicadoPor",
+        "totalContratos", "volumeBruto", "volumeLiquido", "comissaoTotal"
+      ],
+      "relations": {
+        "products": "MetaProduct[]",
+        "bancos": "Banco[]"
+      },
+      "metrics": [
+        "metaAtingida", "metaPorBanco", "metaPorProduto"
+      ]
+    },
+
+    "ranking": {
+      "endpoints": {
+        "promotores": "/dashboard/ranking",
+        "bancos": "/dashboard/resumo",
+        "comissoes": "/comissoes/resumo"
+      },
+      "charts": [
+        { "type": "bar", "title": "Ranking de Promotores" },
+        { "type": "bar", "title": "Ranking de Bancos" }
+      ]
+    },
+
+    "configuracoes": {
+      "submodules": {
+        "bancos": {
+          "endpoint": "/bancos",
+          "fields": [
+            "nome", "codigo", "produtos_suportados",
+            "coeficiente", "taxa_media", "ativo"
+          ],
+          "actions": {
+            "create": { "method": "POST", "path": "/bancos" },
+            "update": { "method": "PUT", "path": "/bancos/:id" },
+            "delete": { "method": "DELETE", "path": "/bancos/:id" }
+          }
+        },
+        "promotoras": {
+          "endpoint": "/promotoras",
+          "fields": [
+            "nome", "codigo", "token", "produtos_suportados",
+            "bancos_suportados", "ativo", "ultima_sincronizacao"
+          ],
+          "actions": {
+            "create": { "method": "POST", "path": "/promotoras" },
+            "update": { "method": "PUT", "path": "/promotoras/:id" },
+            "delete": { "method": "DELETE", "path": "/promotoras/:id" }
+          }
+        },
+        "produtos": {
+          "endpoint": "/produtos",
+          "fields": [
+            "nome", "categoria", "descricao", "ativo",
+            "promotoras_vinculadas", "bancos_vinculados"
+          ],
+          "actions": {
+            "create": { "method": "POST", "path": "/produtos" },
+            "update": { "method": "PUT", "path": "/produtos/:id" },
+            "delete": { "method": "DELETE", "path": "/produtos/:id" }
+          }
+        }
+      }
+    },
+
+    "triagem": {
+      "endpoint": "/triagem",
+      "fields": [
+        "cliente_id", "resultado", "produto_sugerido", "motivo"
+      ],
+      "actions": {
+        "analisar": { "method": "POST", "path": "/triagem" },
+        "historico": { "method": "GET", "path": "/triagem/:id" }
+      },
+      "integrations": {
+        "crefaz": "/integracoes/crefaz/simular",
+        "workbank": "/integracoes/workbank/sync",
+        "nexxo": "/integracoes/nexxo/sync"
+      }
+    }
+  },
+
+  "permissions": {
+    "roles": ["admin", "promotor"],
+    "admin": {
+      "access": ["bancos", "promotoras", "produtos", "metas", "configuracoes"]
+    },
+    "promotor": {
+      "access": ["clientes", "contratos", "followups", "dashboard", "ranking"]
+    }
+  },
+
+  "integrations": {
+    "nexxo": { "statusEndpoint": "/integracoes/nexxo/sync" },
+    "workbank": { "statusEndpoint": "/integracoes/workbank/sync" },
+    "crefaz": {
+      "simulate": "/integracoes/crefaz/simular",
+      "contract": "/integracoes/crefaz/contratar"
+    }
+  },
+
+  "realtime": {
+    "provider": "supabase",
+    "channels": ["clientes", "contratos", "followups", "metas"],
+    "events": ["INSERT", "UPDATE", "DELETE"]
+  },
+
+  "security": {
+    "authentication": "JWT",
+    "headers": {
+      "Authorization": "Bearer <token>"
+    },
+    "roles": {
+      "admin": ["CRUD bancos/promotoras/produtos"],
+      "promotor": ["visualizar e registrar contratos e follow-ups"]
+    }
+  }
+}

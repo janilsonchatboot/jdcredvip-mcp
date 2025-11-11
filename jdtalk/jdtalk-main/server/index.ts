@@ -52,8 +52,8 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    console.error("Unhandled request error:", err);
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -67,11 +67,16 @@ app.use((req, res, next) => {
 
   // Porta configurável (default 5000). Servidor atende API + client.
   const port = Number(process.env.PORT ?? 5000);
-  server.listen({
+  const listenOptions: import("net").ListenOptions & { reusePort?: boolean } = {
     port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+    host: "0.0.0.0"
+  };
+
+  if (process.platform !== "win32") {
+    listenOptions.reusePort = true;
+  }
+
+  server.listen(listenOptions, () => {
     log(`serving on port ${port}`);
   });
 })();

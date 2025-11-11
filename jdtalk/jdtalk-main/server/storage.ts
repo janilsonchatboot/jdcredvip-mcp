@@ -1,31 +1,74 @@
-import { 
-  User, InsertUser, 
-  Customer, InsertCustomer, 
-  Conversation, InsertConversation, ConversationWithCustomer,
-  Message, InsertMessage,
-  Ticket, InsertTicket, TicketWithDetails,
-  Order, InsertOrder,
-  Pipeline, InsertPipeline,
-  PipelineStage, InsertPipelineStage,
-  Lead, InsertLead, LeadWithDetails,
-  LeadActivity, InsertLeadActivity,
-  WhatsAppConfig, InsertWhatsAppConfig,
-  Plugin, InsertPlugin, PluginManifest,
-  PluginDependency, InsertPluginDependency,
-  PluginSetting, InsertPluginSetting,
-  PluginRegistry, InsertPluginRegistry,
-  users, customers, conversations, messages, tickets, orders,
-  pipelines, pipelineStages, leads, leadActivities, whatsappConfig,
-  plugins, pluginDependencies, pluginSettings, pluginRegistry
+import {
+  User,
+  InsertUser,
+  Customer,
+  InsertCustomer,
+  Conversation,
+  InsertConversation,
+  ConversationWithCustomer,
+  Message,
+  InsertMessage,
+  Ticket,
+  InsertTicket,
+  TicketWithDetails,
+  Order,
+  InsertOrder,
+  Pipeline,
+  InsertPipeline,
+  PipelineStage,
+  InsertPipelineStage,
+  Lead,
+  InsertLead,
+  LeadWithDetails,
+  LeadActivity,
+  InsertLeadActivity,
+  WhatsAppConfig,
+  InsertWhatsAppConfig,
+  Plugin,
+  InsertPlugin,
+  PluginManifest,
+  PluginDependency,
+  InsertPluginDependency,
+  PluginSetting,
+  InsertPluginSetting,
+  PluginRegistry,
+  InsertPluginRegistry,
+  users,
+  customers,
+  conversations,
+  messages,
+  tickets,
+  orders,
+  pipelines,
+  pipelineStages,
+  leads,
+  leadActivities,
+  whatsappConfig,
+  plugins,
+  pluginDependencies,
+  pluginSettings,
+  pluginRegistry,
+  passwordResetTokens,
+  PasswordResetToken
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
+import { hashPassword, PASSWORD_HASH_PREFIX } from "./utils/password";
+import { randomBytes } from "crypto";
 
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserPassword(id: number, password: string): Promise<void>;
+  listUsers(): Promise<User[]>;
+  updateUser(id: number, data: Partial<Pick<User, "displayName" | "role">>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+  createPasswordResetToken(userId: number, expiresAt: Date): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenUsed(id: number): Promise<void>;
+  deletePasswordResetTokensByUser(userId: number): Promise<void>;
   
   // Customers
   getCustomer(id: number): Promise<Customer | undefined>;
@@ -131,11 +174,88 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    const password = insertUser.password.startsWith(`${PASSWORD_HASH_PREFIX}$`)
+      ? insertUser.password
+      : hashPassword(insertUser.password);
+
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values({
+        ...insertUser,
+        password
+      })
       .returning();
     return user;
+  }
+
+  async updateUserPassword(id: number, password: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password })
+      .where(eq(users.id, id));
+  }
+
+  async listUsers(): Promise<User[]> {
+    const allUsers = await db.select().from(users).orderBy(users.id);
+    return allUsers;
+  }
+
+  async updateUser(id: number, data: Partial<Pick<User, "displayName" | "role">>): Promise<User | undefined> {
+    if (!data.displayName && !data.role) {
+      const [existing] = await db.select().from(users).where(eq(users.id, id));
+      return existing;
+    }
+
+    const [updated] = await db
+      .update(users)
+      .set({
+        ...(data.displayName ? { displayName: data.displayName } : {}),
+        ...(data.role ? { role: data.role } : {}),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result?.rowCount ?? 0) > 0;
+  }
+
+  async deletePasswordResetTokensByUser(userId: number): Promise<void> {
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+  }
+
+  async createPasswordResetToken(userId: number, expiresAt: Date): Promise<PasswordResetToken> {
+    const token = randomBytes(32).toString("hex");
+    const now = new Date();
+
+    await this.deletePasswordResetTokensByUser(userId);
+    const [row] = await db
+      .insert(passwordResetTokens)
+      .values({
+        userId,
+        token,
+        expiresAt,
+        createdAt: now,
+      })
+      .returning();
+    return row;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [row] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    return row;
+  }
+
+  async markPasswordResetTokenUsed(id: number): Promise<void> {
+    await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.id, id));
   }
 
   // Customers

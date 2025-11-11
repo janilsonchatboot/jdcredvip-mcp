@@ -104,6 +104,15 @@ Sugestao: criar `POST /triagem/simular` e opcionalmente `GET /triagem/historico?
 | PUT | `/bancos/:id` | ?? | Atualizar regras/coeficientes. |
 | DELETE | `/bancos/:id` | ?? | Soft delete. |
 
+## 11. Importacoes
+| Metodo | Endpoint | Status | Observacoes |
+|--------|----------|--------|-------------|
+| POST | /import/upload | ? | Upload multipart (CSV/XLSX) com analise Codex + registro em imported_reports. |
+| POST | /import/analisar | ? | Analise em JSON/base64; use persist=true apenas quando quiser gravar. |
+| GET  | /import/historico | ? | Lista historico com filtros (limit, offset, promotora). |
+| POST | /importar-relatorio | ? | Endpoint legado que delega para o fluxo novo. |
+| GET  | /importacoes/relatorios | ? | Alias legado para o historico. |
+
 ## Conclusoes
 1. **Existentes**: `/`, `/triagem`, `/api/publicar-meta`, `/api/metas`, `/api/metas/:id`, `/api/dashboard`, `/dashboard`, `/integracoes/crefaz/*`, `/integracoes/nexxo/*`, `/integracoes/status`.
 2. **Prioridades imediatas**:
@@ -116,3 +125,8 @@ Sugestao: criar `POST /triagem/simular` e opcionalmente `GET /triagem/historico?
    - Armazenamento de historico da triagem.
 
 Este checklist pode ser usado como backlog tecnico. Conforme cada modulo for modelado (migration/servico), atualize a tabela e o README oficial.
+
+## Atualizacoes v3.05
+- Implementado `GET /api/dashboard/trend` (serie temporal com cache e comparativo).
+- Implementado `GET /api/core/status` (manifest GAIA, uptime e memoria).
+- Implementado `GET /api/auditoria/integracoes` (central de logs com filtros/paginacao).

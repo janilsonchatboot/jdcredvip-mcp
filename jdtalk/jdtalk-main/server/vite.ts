@@ -67,14 +67,34 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
-export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+const hasIndexFile = (dir: string) =>
+  fs.existsSync(dir) && fs.existsSync(path.join(dir, "index.html"));
 
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+const resolveStaticPath = () => {
+  const candidates = [
+    path.resolve(process.cwd(), "dist", "public"),
+    path.resolve(import.meta.dirname, "..", "dist", "public"),
+    path.resolve(import.meta.dirname, "public"),
+    path.resolve(process.cwd(), "public"),
+    path.resolve(process.cwd(), "jdtalk", "jdtalk-main", "dist", "public")
+  ];
+
+  for (const candidate of candidates) {
+    if (hasIndexFile(candidate)) {
+      log(`Serving static assets from ${candidate}`, "static");
+      return candidate;
+    }
   }
+
+  throw new Error(
+    `Could not find any build output with index.html. Looked for: ${candidates.join(
+      ", ",
+    )}. Run "npm run build" in jdtalk-main first.`,
+  );
+};
+
+export function serveStatic(app: Express) {
+  const distPath = resolveStaticPath();
 
   app.use(express.static(distPath));
 

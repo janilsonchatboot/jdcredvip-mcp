@@ -1,0 +1,55 @@
+{
+  "version": "v3.05",
+  "updatedAt": "2025-11-10T03:00:00Z",
+  "modules": [
+    {
+      "id": "gaia-core",
+      "name": "GAIA Core Dashboard",
+      "owner": "JD CRED VIP Systems",
+      "status": "ativo",
+      "version": "3.05.0",
+      "endpoints": ["/api/dashboard", "/api/dashboard/resumo", "/api/dashboard/ranking", "/api/dashboard/trend"],
+      "ui": ["/crm/dashboard"],
+      "description": "Painel inteligente com ma©tricas consolidadas, pera­odo global e variaa§a£o temporal."
+    },
+    {
+      "id": "gaia-ranking",
+      "name": "Ranking Promotoras",
+      "owner": "JD CRED VIP Systems",
+      "status": "ativo",
+      "version": "3.05.0",
+      "endpoints": ["/api/ranking"],
+      "ui": ["/crm/ranking"],
+      "description": "Top promotoras, produtos e status com corte dina¢mico."
+    },
+    {
+      "id": "gaia-importacao",
+      "name": "Central de Importaa§aµes",
+      "owner": "JD CRED VIP Systems",
+      "status": "ativo",
+      "version": "3.05.0",
+      "endpoints": ["/import/upload", "/import/analisar", "/import/historico"],
+      "ui": ["/crm/importacao"],
+      "description": "Pipeline Codex + heura­stica com auditoria completa de arquivos."
+    },
+    {
+      "id": "gaia-logs",
+      "name": "Central de Logs",
+      "owner": "JD CRED VIP Systems",
+      "status": "ativo",
+      "version": "3.05.0",
+      "endpoints": ["/api/auditoria/integracoes"],
+      "ui": ["/crm/logs"],
+      "description": "Observabilidade de integraa§aµes com filtros, modal detalhado e exportaa§a£o."
+    },
+    {
+      "id": "gaia-core-status",
+      "name": "Status GAIA Core",
+      "owner": "JD CRED VIP Systems",
+      "status": "ativo",
+      "version": "1.0.0",
+      "endpoints": ["/api/core/status"],
+      "description": "Saaºde do runtime, uptime, mema³ria e registro de ma³dulos."
+    }
+  ]
+}

@@ -3,7 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiRequest } from "@/lib/queryClient";
 
 import {
   Card,
@@ -73,11 +74,10 @@ export default function AccountPage() {
   async function onPasswordSubmit(data: PasswordFormValues) {
     setIsPasswordSubmitting(true);
     try {
-      // Simulação de chamada API - em produção, substituir por fetch real
-      console.log("Alterando senha:", data);
-      
-      // Simular uma chamada de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await apiRequest("POST", "/api/auth/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
       
       toast({
         title: "Senha alterada com sucesso",
@@ -85,11 +85,11 @@ export default function AccountPage() {
       });
       
       passwordForm.reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao alterar senha:", error);
       toast({
         title: "Erro ao alterar senha",
-        description: "Não foi possível alterar sua senha. Tente novamente.",
+        description: error?.message || "Não foi possível alterar sua senha. Tente novamente.",
         variant: "destructive",
       });
     } finally {

@@ -13,6 +13,7 @@ import {
   LeadActivity, InsertLeadActivity
 } from '@shared/schema';
 import { IStorage } from './storage';
+import { hashPassword, PASSWORD_HASH_PREFIX } from "./utils/password";
 
 /**
  * Implementação da interface IStorage usando MySQL
@@ -62,18 +63,30 @@ export class MySQLStorage implements IStorage {
   }
   
   async createUser(user: InsertUser): Promise<User> {
+    const password = user.password.startsWith(`${PASSWORD_HASH_PREFIX}$`)
+      ? user.password
+      : hashPassword(user.password);
+
     const result = await this.query(
       'INSERT INTO users (username, password, displayName, role) VALUES (?, ?, ?, ?)',
-      [user.username, user.password, user.displayName, user.role]
+      [user.username, password, user.displayName, user.role]
     );
     
     const insertId = (result as any).insertId;
     return {
       id: insertId,
       ...user,
+      password,
       createdAt: new Date(),
       updatedAt: new Date()
     };
+  }
+
+  async updateUserPassword(id: number, password: string): Promise<void> {
+    await this.query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [password, id]
+    );
   }
   
   // Implementação de Customer

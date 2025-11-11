@@ -38,6 +38,7 @@ Copie `.env.example` para `.env` e ajuste:
 | `PORT`         | Porta HTTP (padrao `8080`).                                        |
 | `TRIAGEM_URL`  | URL usada por `triagem.js` (integracoes).                          |
 | `API_KEY`      | Chave utilizada por integracoes externas.                          |
+| `FEATURE_MODULAR_ROUTES` | Define se o servidor usa a nova arquitetura modular (`true`) ou carrega o servidor legado (`false`). |
 | `DB_CLIENT`    | `pg` para PostgreSQL ou `mysql2` para MySQL.                       |
 | `DB_HOST`      | Host do banco (ex.: `127.0.0.1`).                                  |
 | `DB_PORT`      | Porta (`5432` Postgres / `3306` MySQL).                             |
