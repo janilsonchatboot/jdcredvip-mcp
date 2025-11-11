@@ -50,6 +50,11 @@ export function avaliar(req, res) {
     comissaoPercent = 0.08;
   }
 
+  const nomeInformado = Boolean(nome.trim());
+  if (status === "Nao apto" && nomeInformado && (possuiPerfil || produtoNormalizado)) {
+    status = "Apto";
+  }
+
   const volume = Number(volumeLiquido) || 0;
   const comissaoEstimada = Number((volume * comissaoPercent).toFixed(2));
 

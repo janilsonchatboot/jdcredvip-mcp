@@ -1,6 +1,7 @@
 // === JD CRED VIP — Configuração de Ambiente ===
 import path from "path";
 import { fileURLToPath } from "url";
+import { randomBytes } from "node:crypto";
 import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +32,25 @@ const normalizeClient = (value = "") => {
 const client = normalizeClient(process.env.DB_CLIENT);
 
 const defaultPort = client === "mysql2" ? 3306 : 5432;
+const isProduction = process.env.NODE_ENV === "production";
+
+const ensureSecret = (value, label) => {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  if (normalized) {
+    return normalized;
+  }
+
+  if (isProduction) {
+    throw new Error(`${label} must be configured when NODE_ENV=production`);
+  }
+
+  return randomBytes(32).toString("hex");
+};
+
+const jwtSecret = ensureSecret(
+  process.env.AUTH_JWT_SECRET ?? process.env.JWT_SECRET,
+  "AUTH_JWT_SECRET or JWT_SECRET"
+);
 
 export const env = {
   port: numberOr(process.env.PORT, 8080),
@@ -65,7 +85,7 @@ export const env = {
     }
   },
   security: {
-    jwtSecret: process.env.AUTH_JWT_SECRET || process.env.JWT_SECRET || "dev-jdcredvip-secret"
+    jwtSecret
   },
   features: {
     modularRoutes: booleanOr(
